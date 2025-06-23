@@ -1,5 +1,6 @@
 package io.fundy.fundyserver.project.entity;
 
+import io.fundy.fundyserver.project.dto.project.ProjectRequestDTO;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -76,6 +77,26 @@ public class Project {
         rewards.add(reward);
         reward.setProject(this);
     }
+
+    public static Project create(
+            /*User user,*/ Category category, ProjectRequestDTO dto
+    ) {
+        Project project = new Project();
+//        project.user = user;
+        project.category = category;
+        project.title = dto.getTitle();
+        project.description = dto.getDescription();
+        project.goalAmount = dto.getGoalAmount();
+        project.currentAmount = 0;
+        project.deadline = dto.getDeadline();
+        project.productStatus = ProjectStatus.WAITING_APPROVAL;
+        project.viewCount = 0;
+        project.createdAt = LocalDateTime.now();
+        project.updatedAt = LocalDateTime.now();
+        return project;
+    }
+
+
 }
 
 

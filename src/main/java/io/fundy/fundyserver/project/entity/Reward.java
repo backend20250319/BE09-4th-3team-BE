@@ -1,5 +1,6 @@
 package io.fundy.fundyserver.project.entity;
 
+import io.fundy.fundyserver.project.dto.reward.RewardRequestDTO;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,5 +39,16 @@ public class Reward {
             project.getRewards().add(this);
         }
     }
+
+    public static Reward of(RewardRequestDTO dto, Project project) {
+        Reward reward = new Reward();
+        reward.title = dto.getTitle();
+        reward.amount = dto.getAmount();
+        reward.description = dto.getDescription();
+        reward.stock = dto.getStock();
+        reward.setProject(project); // 연관관계 설정
+        return reward;
+    }
+
 }
 
