@@ -11,7 +11,7 @@ public class AdminFundResponseDto {
 
     private Integer no;              // 순번
     private Long id;                 // 후원 ID
-    private Long userId;             // 후원자 ID user테이블에서 join해서 이름 가져오기
+    private String userId;             // 후원자 ID user테이블에서 join해서 이름 가져오기
     private Long projectId;          // 프로젝트 ID
     private Long rewardId;           // 리워드 ID
     private Integer amount;          // 후원 금액
