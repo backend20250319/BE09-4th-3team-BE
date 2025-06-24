@@ -12,7 +12,7 @@ public class AdminProjectResponseDto {
     private Integer no;              // 목록 순번
     private Long id;                 // 프로젝트 ID
     private String title;            // 프로젝트 제목
-    private Long userId;             // 창작자 ID
+    private String userId;             // 창작자 ID
     private Integer categoryId;      // 카테고리 ID
     private Integer goalAmount;      // 목표 금액
     private Integer currentAmount;   // 현재 후원 금액

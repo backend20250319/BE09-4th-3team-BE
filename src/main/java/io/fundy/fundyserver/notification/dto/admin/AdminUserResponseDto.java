@@ -10,7 +10,6 @@ import lombok.*;
 public class AdminUserResponseDto {
 
     private Integer no; // 조회 순번 또는 row index
-
     private String userId;         // 로그인 ID
     private String email;          // 이메일 주소
     private String nickname;       // 사용자 이름
