@@ -1,10 +1,18 @@
 package io.fundy.fundyserver.notification.entity;
 
 import jakarta.persistence.*;
+import lombok.*;
 import org.springframework.data.annotation.Id;
 
 import java.time.LocalDateTime;
 
+@Entity
+@Table(name = "notifications")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Notification {
 
     @Id
@@ -12,11 +20,11 @@ public class Notification {
     private Long notificationId;
 
 //    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "user_id", nullable = false) // users.id 참조
+//    @JoinColumn(name = "user_id", nullable = false)
 //    private User user;
-
+//
 //    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "id") // 관련 프로젝트 ID (nullable)
+//    @JoinColumn(name = "project_id", nullable = false)
 //    private Project project;
 
     @Column(length = 50, nullable = false)

@@ -19,22 +19,31 @@ public class ProjectReview {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long reviewId;
 
+//
 //    @ManyToOne(fetch = FetchType.LAZY)
 //    @JoinColumn(name = "project_id", nullable = false)
 //    private Project project;
-
+//
 //    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "id", nullable = false) // user.id 참조
+//    @JoinColumn(name = "user_id", nullable = false)
 //    private User user;
+//
 
     @Column(nullable = false)
-    private int rating;
+    private int rewardSatisfaction;
+
+    @Column(nullable = false)
+    private int planningSatisfaction;
+
+    @Column(nullable = false)
+    private int communicationSatisfaction;
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
-    private LocalDateTime createdAt;
+    private String imageUrl;
 
+    private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     @PrePersist
