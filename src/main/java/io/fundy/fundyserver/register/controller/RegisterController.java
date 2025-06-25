@@ -72,7 +72,7 @@ public class RegisterController {
     }
 
     // 유저 본인 정보 조회 컨트롤러
-    @GetMapping("/user/me")
+    @GetMapping("/user/me/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<UserResponseDTO> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
@@ -82,7 +82,7 @@ public class RegisterController {
     }
 
     // 마이페이지 수정 컨트롤러 
-    @PatchMapping("/user/me_update")
+    @PatchMapping("/user/me/update/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<UserResponseDTO> updateCurrentUser(
             @RequestHeader("Authorization") String authHeader,
@@ -97,7 +97,7 @@ public class RegisterController {
     }
 
     // 로그아웃 컨트롤러
-    @PostMapping("/logout")
+    @PostMapping("user/me/logout/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<String> logout(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
@@ -107,7 +107,7 @@ public class RegisterController {
     }
 
     // 비밀번호 변경 컨트롤러
-    @PatchMapping("/user/me/password_update")
+    @PatchMapping("/user/me/password_update/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<String> changePassword(
             @RequestHeader("Authorization") String authHeader,
@@ -122,14 +122,14 @@ public class RegisterController {
     }
 
     //  회원 탈퇴 컨트롤러
-    @DeleteMapping("/user/me_leave")
+    @DeleteMapping("/user/me_quit/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<String> deleteAccount(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
         String userId = jwtProvider.getUserId(token);
         Integer id = userService.getUserByUserId(userId).getId();
 
-        userService.updateUserStatus(id, UserStatus.BANNED); // Soft delete 처리
+        userService.updateUserStatus(id, UserStatus.QUIT); // Soft delete 처리
         return ResponseEntity.ok("회원 탈퇴 처리 되었습니다.");
     }
 

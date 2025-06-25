@@ -9,5 +9,6 @@ package io.fundy.fundyserver.register.entity;
 public enum UserStatus {
     LOGIN,
     LOGOUT,
-    BANNED
+    BANNED,
+    QUIT
 }
