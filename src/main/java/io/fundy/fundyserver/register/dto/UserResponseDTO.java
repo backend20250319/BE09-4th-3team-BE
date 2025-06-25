@@ -1,8 +1,7 @@
-// UserResponse.java
-package io.fundy.fundyserver.dto;
+package io.fundy.fundyserver.register.dto;
 
-import io.fundy.fundyserver.entity.RoleType;
-import io.fundy.fundyserver.entity.UserStatus;
+import io.fundy.fundyserver.register.entity.RoleType;
+import io.fundy.fundyserver.register.entity.UserStatus;
 import lombok.*;
 import java.time.LocalDateTime;
 
@@ -10,7 +9,10 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserResponse {
+@ToString
+
+// 회원가입 관련 DTO
+public class UserResponseDTO {
     private Integer id;
     private String userId;
     private String nickname;

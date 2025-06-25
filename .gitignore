@@ -35,3 +35,7 @@ out/
 
 ### VS Code ###
 .vscode/
+
+#  ※ ignore 보안 관련 파일 무시
+keystore.p12
+src/main/resources/secret.yml
