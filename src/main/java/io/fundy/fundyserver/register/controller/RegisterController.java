@@ -25,7 +25,7 @@ public class RegisterController {
     private final JwtTokenProvider jwtProvider;
     private final RefreshTokenRepository refreshRepo;
 
-    // 회원가입 컨트롤러
+    // 회원가입 컨트롤러 /
     @PostMapping("/signup")
     public ResponseEntity<UserResponseDTO> signup(@Valid @RequestBody UserRequestDTO req) {
         UserResponseDTO res = userService.signup(req);
