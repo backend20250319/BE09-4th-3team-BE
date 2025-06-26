@@ -1,4 +1,4 @@
-package io.fundy.fundyserver.project.controller.admin;
+package io.fundy.fundyserver.admin.controller;
 
 
 import io.fundy.fundyserver.notification.dto.admin.AdminUserRequestDto;
@@ -27,4 +27,3 @@ import org.springframework.web.bind.annotation.RestController;
 //        return ResponseEntity.ok().build();
 //    }
 //}
-

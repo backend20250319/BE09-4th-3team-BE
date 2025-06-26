@@ -1,4 +1,4 @@
-package io.fundy.fundyserver.project.controller.admin;
+package io.fundy.fundyserver.admin.controller;
 
 import io.fundy.fundyserver.notification.dto.admin.AdminProjectRequestDto;
 import org.springframework.http.ResponseEntity;
