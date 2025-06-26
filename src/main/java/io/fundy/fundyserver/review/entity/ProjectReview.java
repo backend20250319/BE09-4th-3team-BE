@@ -1,4 +1,6 @@
-package io.fundy.fundyserver.projectreview.entity;
+package io.fundy.fundyserver.review.entity;
+
+import io.fundy.fundyserver.register.entity.User;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -19,15 +21,16 @@ public class ProjectReview {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long reviewId;
 
-//
 //    @ManyToOne(fetch = FetchType.LAZY)
 //    @JoinColumn(name = "project_id", nullable = false)
 //    private Project project;
-//
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "user_id", nullable = false)
-//    private User user;
-//
+    @Column(name = "project_id", nullable = false)
+    private Long projectId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
 
     @Column(nullable = false)
     private int rewardSatisfaction;

@@ -1,8 +1,9 @@
 package io.fundy.fundyserver.notification.entity;
 
+import io.fundy.fundyserver.register.entity.User;
+
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.Id;
 
 import java.time.LocalDateTime;
 
@@ -23,9 +24,9 @@ public class Notification {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "project_id", nullable = false)
-    private Project project;
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "project_id", nullable = false)
+//    private Project project;
 
     @Column(length = 50, nullable = false)
     private String type;
