@@ -11,10 +11,10 @@ import org.springframework.web.multipart.MultipartFile;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReviewRequestDTO {
-    private Long projectId;
-    private int rewardSatisfaction;
-    private int planningSatisfaction;
-    private int communicationSatisfaction;
+    private Long projectNo;
+    private int rewardStatus;
+    private int planStatus;
+    private int commStatus;
     private String content;
     private MultipartFile image;
 }

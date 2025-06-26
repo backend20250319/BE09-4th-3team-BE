@@ -18,25 +18,27 @@ public class Notification {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long notificationId;
+    @Column(name = "notification_no")
+    private Long notificationNo;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_no", nullable = false)
     private User user;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "project_id", nullable = false)
-//    private Project project;
+    // @ManyToOne(fetch = FetchType.LAZY)
+    // @JoinColumn(name = "project_id", nullable = false)
+    // private Project project;
 
-    @Column(length = 50, nullable = false)
+    @Column(name = "type", length = 50, nullable = false)
     private String type;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(name = "message", columnDefinition = "TEXT", nullable = false)
     private String message;
 
-    @Column(nullable = false)
+    @Column(name = "is_read", nullable = false)
     private Boolean isRead = false;
 
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @PrePersist

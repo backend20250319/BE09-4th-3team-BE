@@ -2,7 +2,7 @@ package io.fundy.fundyserver.review.dto;
 
 public enum Satisfaction {
 
-    BAD(1), AVERAGE(2), GOOD(3);
+    BAD(1), AVERAGE(3), GOOD(5);
 
     private final int value;
     Satisfaction(int value) { this.value = value; }

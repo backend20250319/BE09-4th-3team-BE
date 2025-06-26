@@ -8,6 +8,7 @@ import java.util.List;
 public interface ProjectReviewRepository extends JpaRepository<ProjectReview, Long> {
 
 //    List<ProjectReview> findByProject_ProjectId(Long projectId);
-    List<ProjectReview> findByProjectId(Long projectId);
+    List<ProjectReview> findByProjectNo(Long projectNo);
     List<ProjectReview> findByUser_Id(Long userId);
+
 }
