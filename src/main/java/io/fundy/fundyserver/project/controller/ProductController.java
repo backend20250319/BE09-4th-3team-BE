@@ -23,7 +23,7 @@ public class ProductController {
     @PostMapping("/project")
     public ResponseEntity<ProjectResponseDTO> createProject(
             @Valid @RequestBody ProjectRequestDTO requestDTO,
-            @AuthenticationPrincipal CustomUserDetails user
+                @AuthenticationPrincipal CustomUserDetails user
     ) {
         String userId = user.getUsername(); // 여기서 String 추출
 
