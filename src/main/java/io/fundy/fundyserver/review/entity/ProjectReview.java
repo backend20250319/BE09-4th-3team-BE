@@ -1,4 +1,4 @@
-package io.fundy.fundyserver.projectreview.entity;
+package io.fundy.fundyserver.review.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
