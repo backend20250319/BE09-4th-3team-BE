@@ -1,6 +1,10 @@
 package io.fundy.fundyserver.admin.dto;
 
+import io.fundy.fundyserver.project.entity.Project;
 import lombok.*;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -9,17 +13,36 @@ import lombok.*;
 @Builder
 public class AdminProjectResponseDto {
 
-    private Integer no;              // 목록 순번
-    private Long id;                 // 프로젝트 ID
-    private String title;            // 프로젝트 제목
-    private String userId;             // 창작자 ID
-    private Integer categoryId;      // 카테고리 ID
-    private Integer goalAmount;      // 목표 금액
-    private Integer currentAmount;   // 현재 후원 금액
-    private String deadline;         // 마감일
-    private String productStatus;    // 프로젝트 상태
-    private Integer viewCount;       // 조회수
-    private String thumbnailUrl;     // 썸네일 URL
-    private String createdAt;        // 생성일
-    private String updatedAt;        // 수정일
+    private Long projectNo;
+    private String title;
+    private String description;
+    private Integer goalAmount;
+    private Integer currentAmount;
+    private LocalDate deadline;
+    private String productStatus;
+    private String thumbnailUrl;
+    private Integer viewCount;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    private String userId;        // 창작자 로그인 ID
+    private String categoryName;  // 카테고리 이름
+
+    public static AdminProjectResponseDto fromEntity(Project project) {
+        return AdminProjectResponseDto.builder()
+                .projectNo(project.getProject_no())
+                .title(project.getTitle())
+                .description(project.getDescription())
+                .goalAmount(project.getGoalAmount())
+                .currentAmount(project.getCurrentAmount())
+                .deadline(project.getDeadline())
+                .productStatus(project.getProductStatus().name())
+                .thumbnailUrl(project.getThumbnailUrl())
+                .viewCount(project.getViewCount())
+                .createdAt(project.getCreatedAt())
+                .updatedAt(project.getUpdatedAt())
+                .userId(project.getUser().getUserId())
+                .categoryName(project.getCategory().getName())
+                .build();
+    }
 }
