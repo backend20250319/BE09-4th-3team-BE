@@ -1,4 +1,4 @@
-package io.fundy.fundyserver.project.dto.notification;
+package io.fundy.fundyserver.notification.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

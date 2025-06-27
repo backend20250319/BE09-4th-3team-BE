@@ -1,7 +1,6 @@
 package io.fundy.fundyserver.project.entity;
 
 import io.fundy.fundyserver.project.dto.project.ProjectRequestDTO;
-import io.fundy.fundyserver.register.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,9 +20,9 @@ public class Project {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long project_no; // 프로젝트 고유 ID
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user; // 등록한 창작자 (회원)
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "user_id", nullable = false)
+//    private User user; // 등록한 창작자 (회원)
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
@@ -80,11 +79,11 @@ public class Project {
     }
 
     public static Project create(
-            User user, Category category, ProjectRequestDTO dto
+            /*User user,*/ Category category, ProjectRequestDTO dto
     ) {
 
         Project project = new Project();
-        project.user = user;
+//        project.user = user;
         project.category = category;
         project.title = dto.getTitle();
         project.description = dto.getDescription();
@@ -95,6 +94,7 @@ public class Project {
         project.viewCount = 0;
         project.createdAt = LocalDateTime.now();
         project.updatedAt = LocalDateTime.now();
+
         return project;
     }
 
