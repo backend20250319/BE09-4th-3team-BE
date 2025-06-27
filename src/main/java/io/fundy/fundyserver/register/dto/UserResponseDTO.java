@@ -24,4 +24,6 @@ public class UserResponseDTO {
     private RoleType roleType;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private LocalDateTime lastLoginAt;
+    private LocalDateTime lastLogoutAt;
 }

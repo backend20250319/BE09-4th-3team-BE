@@ -1,7 +1,10 @@
 package io.fundy.fundyserver.register.repository;
 
+import io.fundy.fundyserver.register.entity.RoleType;
 import io.fundy.fundyserver.register.entity.User;
 import io.fundy.fundyserver.register.entity.UserStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
@@ -22,4 +25,12 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     // 로그인 시 BAN 상태 사용자는 제외하고 조회
     Optional<User> findByUserIdAndUserStatusNot(String userId, UserStatus banned);
+
+    // ADMIN에서 사용
+    Page<User> findByNicknameContainingIgnoreCase(String nickname, Pageable pageable);
+    // 닉네임으로 검색 & roleType이 USER인 경우만
+    Page<User> findByRoleTypeAndNicknameContainingIgnoreCase(RoleType roleType, String nickname, Pageable pageable);
+
+    // 전체 조회 & roleType이 USER인 경우만
+    Page<User> findByRoleType(RoleType roleType, Pageable pageable);
 }
