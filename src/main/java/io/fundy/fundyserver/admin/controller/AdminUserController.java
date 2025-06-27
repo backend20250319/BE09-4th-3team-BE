@@ -1,5 +1,6 @@
 package io.fundy.fundyserver.admin.controller;
 
+import io.fundy.fundyserver.admin.dto.AdminUserRequestDto;
 import io.fundy.fundyserver.admin.dto.AdminUserResponseDto;
 import io.fundy.fundyserver.admin.service.AdminUserService;
 import lombok.RequiredArgsConstructor;
@@ -26,5 +27,15 @@ public class AdminUserController {
     ) {
         Page<AdminUserResponseDto> result = adminUserService.getUserList(page, nickname);
         return ResponseEntity.ok(result);
+    }
+
+    /**
+     * 사용자 상태 변경 (예: BAN → BANNED)
+     * @param dto userNo와 userStatus가 담긴 요청 객체
+     */
+    @PostMapping("/status")
+    public ResponseEntity<Void> updateUserStatus(@RequestBody AdminUserRequestDto dto) {
+        adminUserService.updateUserStatus(dto.getUserNo(), dto.getUserStatus());
+        return ResponseEntity.ok().build();
     }
 }

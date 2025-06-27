@@ -7,8 +7,8 @@ import io.fundy.fundyserver.register.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
-
-import java.util.stream.Collectors;
+import io.fundy.fundyserver.register.entity.UserStatus;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -38,4 +38,27 @@ public class AdminUserService {
         return users.map(AdminUserResponseDto::fromEntity);
     }
 
+    @Transactional
+    public void updateUserStatus(Integer userNo, String statusKeyword) {
+        User user = userRepository.findById(userNo)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        // 문자열로 들어온 상태값 처리
+        String normalized = statusKeyword.trim().toUpperCase();
+
+        // "BAN" → "BANNED"로 매핑
+        if (normalized.equals("BAN")) {
+            user.setUserStatus(UserStatus.BANNED);
+        } else {
+            try {
+                user.setUserStatus(UserStatus.valueOf(normalized)); // LOGIN, LOGOUT 등
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("올바르지 않은 상태값입니다.");
+            }
+        }
+
+        userRepository.save(user); // 변경사항 저장
+    }
 }
+
+
