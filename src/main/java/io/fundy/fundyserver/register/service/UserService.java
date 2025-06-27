@@ -14,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -64,6 +66,7 @@ public class UserService {
         }
 
         user.setUserStatus(UserStatus.LOGIN);
+        user.setLastLoginAt(LocalDateTime.now());  // ✅ 로그인 시간 기록
         userRepository.save(user);
         return toResponse(user);
     }
@@ -75,6 +78,7 @@ public class UserService {
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
 
         user.setUserStatus(UserStatus.LOGOUT);
+        user.setLastLogoutAt(LocalDateTime.now()); // ✅ 로그아웃 시간 기록
         userRepository.save(user);
     }
 
@@ -165,6 +169,8 @@ public class UserService {
                 .roleType(u.getRoleType())
                 .createdAt(u.getCreatedAt())
                 .updatedAt(u.getUpdatedAt())
+                .lastLoginAt(u.getLastLoginAt())
+                .lastLogoutAt(u.getLastLogoutAt())
                 .build();
     }
 }
