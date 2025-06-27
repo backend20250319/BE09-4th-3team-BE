@@ -1,5 +1,6 @@
 package io.fundy.fundyserver.review.entity;
 
+import io.fundy.fundyserver.project.entity.Project;
 import io.fundy.fundyserver.register.entity.User;
 
 import jakarta.persistence.*;
@@ -11,7 +12,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "project_reviews")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -22,12 +22,9 @@ public class ProjectReview {
     @Column(name = "review_no")
     private Long reviewNo;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "project_id", nullable = false)
-//    private Project project;
-
-    @Column(name = "project_no", nullable = false)
-    private Long projectNo;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_no", nullable = false)
+    private Project project;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_no", nullable = false)
@@ -65,9 +62,9 @@ public class ProjectReview {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public static ProjectReview createReview(Long projectNo, User user, int rewardStatus, int planStatus, int commStatus, String content, String imageUrl) {
+    public static ProjectReview createReview(Project project, User user, int rewardStatus, int planStatus, int commStatus, String content, String imageUrl) {
         ProjectReview review = new ProjectReview();
-        review.projectNo = projectNo;
+        review.project = project;
         review.user = user;
         review.rewardStatus = rewardStatus;
         review.planStatus = planStatus;

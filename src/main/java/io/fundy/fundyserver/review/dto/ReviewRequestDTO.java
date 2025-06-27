@@ -12,9 +12,9 @@ import org.springframework.web.multipart.MultipartFile;
 @AllArgsConstructor
 public class ReviewRequestDTO {
     private Long projectNo;
-    private int rewardStatus;
-    private int planStatus;
-    private int commStatus;
+    private Satisfaction rewardStatus;
+    private Satisfaction planStatus;
+    private Satisfaction commStatus;
     private String content;
     private MultipartFile image;
 }
