@@ -154,7 +154,7 @@ public class UserService {
     // Entity → DTO 변환
     private UserResponseDTO toResponse(User u) {
         return UserResponseDTO.builder()
-                .id(u.getId())
+                .userNo(u.getUserNo())
                 .userId(u.getUserId())
                 .nickname(u.getNickname())
                 .email(u.getEmail())

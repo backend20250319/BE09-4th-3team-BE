@@ -17,7 +17,7 @@ public class User {
     //  PK: 자동 증가 정수 ID
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) // PK 자동 생성
-    private Integer id;
+    private Integer userNo;
 
     //  로그인 ID (유니크)
     @Column(name = "userId", length = 50, nullable = false, unique = true)  // 컬럼 속성(길이, null 허용, unique) 지정
