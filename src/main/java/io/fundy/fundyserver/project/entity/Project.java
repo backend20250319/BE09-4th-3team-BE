@@ -93,6 +93,7 @@ public class Project {
         project.viewCount = 0;
         project.createdAt = LocalDateTime.now();
         project.updatedAt = LocalDateTime.now();
+
         return project;
     }
 
