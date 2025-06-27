@@ -1,12 +1,23 @@
 server:
   port: 8888
 
+upload:
+  path: C:\dev\BE09-4th-3team-Image
+#  파일 서버 URL 전달 받은 뒤 작업 할 내용
+#  path: /upload/to/fileserver/
+#  base-url: https://cdn.myserver.com/images
+
 spring:
   application:
     name: fundyserver
 
   config:
     import: classpath:secret.yml
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
 
   jpa:
     hibernate:
