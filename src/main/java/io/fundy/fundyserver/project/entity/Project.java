@@ -81,6 +81,7 @@ public class Project {
     public static Project create(
             /*User user,*/ Category category, ProjectRequestDTO dto
     ) {
+
         Project project = new Project();
 //        project.user = user;
         project.category = category;
