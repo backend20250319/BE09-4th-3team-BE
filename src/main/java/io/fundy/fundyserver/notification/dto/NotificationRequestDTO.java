@@ -1,4 +1,4 @@
-package io.fundy.fundyserver.project.dto.project;
+package io.fundy.fundyserver.project.dto.notification;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProjectResponseDTO {
+public class NotificationRequestDTO {
+
     private Long projectId;
-    private String status; // WAITING_APPROVAL
 }
