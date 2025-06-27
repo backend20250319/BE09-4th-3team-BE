@@ -24,7 +24,7 @@ public class AdminUserResponseDto {
 
     public static AdminUserResponseDto fromEntity(User user) {
         return AdminUserResponseDto.builder()
-                .no(user.getId())
+                .no(user.getUserNo())
                 .userId(user.getUserId())
                 .email(user.getEmail())
                 .nickname(user.getNickname())
