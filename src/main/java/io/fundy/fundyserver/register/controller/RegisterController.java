@@ -90,7 +90,7 @@ public class RegisterController {
     ) {
         String token = authHeader.replace("Bearer ", "");
         String userId = jwtProvider.getUserId(token);
-        Integer id = userService.getUserByUserId(userId).getId();
+        Integer id = userService.getUserByUserId(userId).getUserNo();
 
         UserResponseDTO updatedUser = userService.updateUser(id, req);
         return ResponseEntity.ok(updatedUser);
@@ -115,7 +115,7 @@ public class RegisterController {
     ) {
         String token = authHeader.replace("Bearer ", "");
         String userId = jwtProvider.getUserId(token);
-        Integer id = userService.getUserByUserId(userId).getId();
+        Integer id = userService.getUserByUserId(userId).getUserNo();
 
         userService.changePassword(id, req);
         return ResponseEntity.ok("비밀번호 변경 하였습니다.");
@@ -127,7 +127,7 @@ public class RegisterController {
     public ResponseEntity<String> deleteAccount(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
         String userId = jwtProvider.getUserId(token);
-        Integer id = userService.getUserByUserId(userId).getId();
+        Integer id = userService.getUserByUserId(userId).getUserNo();
 
         userService.updateUserStatus(id, UserStatus.QUIT); // Soft delete 처리
         return ResponseEntity.ok("회원 탈퇴 처리 되었습니다.");
