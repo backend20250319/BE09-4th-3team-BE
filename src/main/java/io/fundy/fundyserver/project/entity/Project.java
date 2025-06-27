@@ -82,6 +82,7 @@ public class Project {
     public static Project create(
             User user, Category category, ProjectRequestDTO dto
     ) {
+
         Project project = new Project();
         project.user = user;
         project.category = category;
@@ -94,6 +95,7 @@ public class Project {
         project.viewCount = 0;
         project.createdAt = LocalDateTime.now();
         project.updatedAt = LocalDateTime.now();
+
         return project;
     }
 
