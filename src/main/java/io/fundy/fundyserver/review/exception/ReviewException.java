@@ -12,7 +12,4 @@ public class ReviewException extends RuntimeException {
         this.errorCode = errorCode;
     }
 
-    public ReviewErrorCode getErrorCode() {
-        return errorCode;
-    }
 }
