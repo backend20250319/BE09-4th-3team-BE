@@ -23,7 +23,7 @@ public class ProjectReviewController {
     @PostMapping
     public ResponseEntity<?> createReview(@RequestBody ReviewRequestDTO dto,
                                           @AuthenticationPrincipal CustomUserDetails userDetails) {
-        User user = userDetails.getUser();  // CustomUserDetails에서 User 객체 가져오기
+        User user = userDetails.getUser();
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(reviewService.createReview(dto, user));
     }
