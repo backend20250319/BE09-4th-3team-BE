@@ -64,7 +64,7 @@ public class RegisterController {
     }
 
     // 유저 조회 컨트롤러 - 권한 필수 (경로 기반)
-    @GetMapping("/user/{id}")
+    @GetMapping("/user")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Integer id) {
         UserResponseDTO user = userService.getUserById(id);
@@ -72,7 +72,7 @@ public class RegisterController {
     }
 
     // 유저 본인 정보 조회 컨트롤러
-    @GetMapping("/user/me/{id}")
+    @GetMapping("/user/me")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<UserResponseDTO> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
@@ -81,8 +81,8 @@ public class RegisterController {
         return ResponseEntity.ok(user);
     }
 
-    // 마이페이지 수정 컨트롤러 
-    @PatchMapping("/user/me/update/{id}")
+    // 마이페이지 수정 컨트롤러
+    @PatchMapping("/user/me/update")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<UserResponseDTO> updateCurrentUser(
             @RequestHeader("Authorization") String authHeader,
@@ -97,7 +97,7 @@ public class RegisterController {
     }
 
     // 로그아웃 컨트롤러
-    @PostMapping("user/me/logout/{id}")
+    @PostMapping("user/me/logout")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<String> logout(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
@@ -107,7 +107,7 @@ public class RegisterController {
     }
 
     // 비밀번호 변경 컨트롤러
-    @PatchMapping("/user/me/password_update/{id}")
+    @PatchMapping("/user/me/password_update")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<String> changePassword(
             @RequestHeader("Authorization") String authHeader,
@@ -122,7 +122,7 @@ public class RegisterController {
     }
 
     //  회원 탈퇴 컨트롤러
-    @DeleteMapping("/user/me_quit/{id}")
+    @DeleteMapping("/user/me_quit")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<String> deleteAccount(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");

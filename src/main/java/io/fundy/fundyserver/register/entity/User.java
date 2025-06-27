@@ -4,9 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 
-
 // 사용자 정보를 저장하는 JPA 엔티티.
-
 @Entity
 @Table(name = "users")  // JPA 엔티티 선언
 @Getter @Setter
@@ -14,20 +12,21 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class User {
-    //  PK: 자동 증가 정수 ID
+
+    // PK: 자동 증가 정수 ID
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) // PK 자동 생성
     private Integer userNo;
 
-    //  로그인 ID (유니크)
-    @Column(name = "userId", length = 50, nullable = false, unique = true)  // 컬럼 속성(길이, null 허용, unique) 지정
+    // 로그인 ID (유니크)
+    @Column(name = "userId", length = 50, nullable = false, unique = true)
     private String userId;
 
-    //  이메일 (유니크)
+    // 이메일 (유니크)
     @Column(length = 100, nullable = false, unique = true)
     private String email;
 
-    //  암호화된 비밀번호
+    // 암호화된 비밀번호
     @Column(length = 255, nullable = false)
     private String password;
 
@@ -53,7 +52,7 @@ public class User {
     private UserStatus userStatus;
 
     // 유저 역할(RoleType): USER or ADMIN
-    @Enumerated(EnumType.STRING)        // Enum을 문자열로 저장
+    @Enumerated(EnumType.STRING)
     @Column(name = "role_type", nullable = false)
     private RoleType roleType;
 
@@ -65,14 +64,22 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    // 마지막 로그인 시간
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
+
+    // 마지막 로그아웃 시간
+    @Column(name = "last_logout_at")
+    private LocalDateTime lastLogoutAt;
+
     // 최초 저장 전 자동 실행
-    @PrePersist // 생명주기 콜백(@PrePersist, @PreUpdate)으로 생성/수정 시각 자동 관리
+    @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = this.createdAt;
     }
 
-    //수정 시 자동 실행
+    // 수정 시 자동 실행
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
