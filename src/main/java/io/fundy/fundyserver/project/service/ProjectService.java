@@ -42,6 +42,6 @@ public class ProjectService {
         }
 
         Project saved = projectRepository.save(project);
-        return new ProjectResponseDTO(saved.getProduct_no(), saved.getProductStatus().name());
+        return new ProjectResponseDTO(saved.getProject_no(), saved.getProductStatus().name());
     }
 }
