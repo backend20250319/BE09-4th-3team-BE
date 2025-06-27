@@ -19,7 +19,7 @@ public class Project {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long project_no; // 프로젝트 고유 ID
+    private Long projectNo; // 프로젝트 고유 ID
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
