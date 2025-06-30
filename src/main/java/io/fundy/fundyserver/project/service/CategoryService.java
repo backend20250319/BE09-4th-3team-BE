@@ -26,6 +26,6 @@ public class CategoryService {
                 .build();
 
         Category saved = categoryRepository.save(category);
-        return new CategoryDTO(saved.getCategory_no(), saved.getName());
+        return new CategoryDTO(saved.getCategoryNo(), saved.getName());
     }
 }

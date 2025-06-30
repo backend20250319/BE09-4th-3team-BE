@@ -13,7 +13,7 @@ public class Reward {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long reward_no; // 리워드 ID
+    private Long rewardNo; // 리워드 ID
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
