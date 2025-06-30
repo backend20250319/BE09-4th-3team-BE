@@ -48,7 +48,7 @@ public class ProjectReviewService {
     private ReviewResponseDTO toDTO(ProjectReview review) {
         return new ReviewResponseDTO(
                 review.getReviewNo(),
-                review.getProject() != null ? review.getProject().getProject_no() : null, // 이건 맞음
+                review.getProject() != null ? review.getProject().getProjectNo() : null, // 이건 맞음
                 review.getUser() != null ? review.getUser().getNickname() : null,
                 review.getRewardStatus(),
                 review.getPlanStatus(),

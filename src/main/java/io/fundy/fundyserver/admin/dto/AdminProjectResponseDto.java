@@ -30,7 +30,7 @@ public class AdminProjectResponseDto {
 
     public static AdminProjectResponseDto fromEntity(Project project) {
         return AdminProjectResponseDto.builder()
-                .projectNo(project.getProject_no())
+                .projectNo(project.getProjectNo())
                 .title(project.getTitle())
                 .description(project.getDescription())
                 .goalAmount(project.getGoalAmount())

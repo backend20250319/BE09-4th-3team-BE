@@ -1,7 +1,9 @@
 package io.fundy.fundyserver.admin.controller;
 
+import io.fundy.fundyserver.admin.dto.AdminProjectRequestDto;
 import io.fundy.fundyserver.admin.dto.AdminProjectResponseDto;
 import io.fundy.fundyserver.admin.service.AdminProjectService;
+import io.fundy.fundyserver.project.entity.ProjectStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -28,5 +30,16 @@ public class AdminProjectController {
     ) {
         Page<AdminProjectResponseDto> result = adminProjectService.getAllProjects(page, categoryNo);
         return ResponseEntity.ok(result);
+    }
+
+    /**
+     * 프로젝트 상태 변경 (승인/거절)
+     *
+     * @param dto 프로젝트 ID와 변경할 상태값
+     */
+    @PostMapping("/status")
+    public ResponseEntity<Void> updateProjectStatus(@RequestBody AdminProjectRequestDto dto) {
+        adminProjectService.updateProjectStatus(dto.getProjectId(), ProjectStatus.valueOf(dto.getProductStatus()));
+        return ResponseEntity.ok().build();
     }
 }
