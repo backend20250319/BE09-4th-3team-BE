@@ -10,6 +10,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProjectResponseDTO {
-    private Long projectId;
+    private Long projectINo;
     private String status; // WAITING_APPROVAL
 }

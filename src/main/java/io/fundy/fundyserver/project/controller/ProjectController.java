@@ -1,5 +1,6 @@
 package io.fundy.fundyserver.project.controller;
 
+import io.fundy.fundyserver.project.dto.project.ProjectListPageResponseDTO;
 import io.fundy.fundyserver.project.dto.project.ProjectRequestDTO;
 import io.fundy.fundyserver.project.dto.project.ProjectResponseDTO;
 import io.fundy.fundyserver.project.service.ProjectService;
@@ -8,10 +9,9 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -30,4 +30,21 @@ public class ProjectController {
         ProjectResponseDTO response = projectService.createService(requestDTO, userId);
         return ResponseEntity.status(201).body(response);
     }
+
+    @GetMapping("/project/list")
+    public ResponseEntity<?> getProjectList(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size
+    ) {
+        ProjectListPageResponseDTO response = projectService.getProjects(page, size);
+
+        return ResponseEntity.ok(
+                Map.of(
+                        "success", true,
+                        "data", response.getData(),
+                        "pagination", response.getPagination()
+                )
+        );
+    }
+
 }

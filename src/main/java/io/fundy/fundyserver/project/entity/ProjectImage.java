@@ -7,14 +7,14 @@ public class ProjectImage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long projectImageNo;
 
     private String originalFileName;
     private String imageUrl;
     private Boolean isThumbnail;
 
     @ManyToOne
-    @JoinColumn(name = "project_id")
+    @JoinColumn(name = "project_no")
     private Project project;
 }
 
