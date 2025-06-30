@@ -2,6 +2,7 @@ package io.fundy.fundyserver.review.service;
 
 import io.fundy.fundyserver.project.entity.Project;
 import io.fundy.fundyserver.project.repository.ProjectRepository;
+import io.fundy.fundyserver.register.entity.RoleType;
 import io.fundy.fundyserver.register.entity.User;
 import io.fundy.fundyserver.register.repository.UserRepository;
 import io.fundy.fundyserver.review.dto.ReviewRequestDTO;
@@ -36,7 +37,7 @@ public class ProjectReviewService {
                 .orElseThrow(() -> new ReviewException(ReviewErrorCode.PROJECT_NOT_FOUND));
 
         // ✅ (1) 관리자 후기 작성 차단
-        if ("ADMIN".equals(user.getRoleType())) {
+        if (user.getRoleType() == RoleType.ADMIN) {
             throw new ReviewException(ReviewErrorCode.NOT_ALLOWED_FOR_ADMIN);
         }
 
