@@ -14,6 +14,9 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class ProjectReviewService {
@@ -23,6 +26,7 @@ public class ProjectReviewService {
     private final UserRepository userRepository;
     private final ProjectRepository projectRepository;
 
+    // 리뷰 등록
     @Transactional
     public ReviewResponseDTO createReview(ReviewRequestDTO dto, Integer userNo) {
         User user = userRepository.findById(userNo)
@@ -34,7 +38,7 @@ public class ProjectReviewService {
         ProjectReview review = ProjectReview.createReview(
                 project,
                 user,
-                dto.getRewardStatus().getValue(),  // enum에서 int 값 꺼내서 넘김
+                dto.getRewardStatus().getValue(),
                 dto.getPlanStatus().getValue(),
                 dto.getCommStatus().getValue(),
                 dto.getContent(),
@@ -45,10 +49,22 @@ public class ProjectReviewService {
         return toDTO(savedReview);
     }
 
+    public List<ReviewResponseDTO> getReviewsByProjectNo(Long projectNo) {
+        Project project = projectRepository.findById(projectNo)
+                .orElseThrow(() -> new ReviewException(ReviewErrorCode.PROJECT_NOT_FOUND));
+
+        List<ProjectReview> reviews = projectReviewRepository.findByProject(project);
+
+        return reviews.stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    // 엔티티 -> 응답 DTO
     private ReviewResponseDTO toDTO(ProjectReview review) {
         return new ReviewResponseDTO(
                 review.getReviewNo(),
-                review.getProject() != null ? review.getProject().getProjectNo() : null, // 이건 맞음
+                review.getProject() != null ? review.getProject().getProjectNo() : null,
                 review.getUser() != null ? review.getUser().getNickname() : null,
                 review.getRewardStatus(),
                 review.getPlanStatus(),
@@ -58,6 +74,4 @@ public class ProjectReviewService {
                 review.getCreatedAt()
         );
     }
-
-
 }

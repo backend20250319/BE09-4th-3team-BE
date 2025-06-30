@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/reviews")
 @RequiredArgsConstructor
@@ -25,10 +27,9 @@ public class ProjectReviewController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-//    // 특정 프로젝트 리뷰 리스트 조회
-//    @GetMapping("/project/{projectNo}")
-//    public ResponseEntity<List<ReviewResponseDTO>> getReviews(@PathVariable Long projectNo) {
-//        List<ReviewResponseDTO> reviews = reviewService.getReviewsByProjectNo(projectNo);
-//        return ResponseEntity.ok(reviews);
-//    }
+    @GetMapping("/project/{projectNo}")
+    public ResponseEntity<List<ReviewResponseDTO>> getReviews(@PathVariable Long projectNo) {
+        List<ReviewResponseDTO> reviews = reviewService.getReviewsByProjectNo(projectNo);
+        return ResponseEntity.ok(reviews);
+    }
 }
