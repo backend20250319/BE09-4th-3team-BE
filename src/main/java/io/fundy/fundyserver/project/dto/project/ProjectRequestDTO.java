@@ -17,8 +17,10 @@ public class ProjectRequestDTO {
     private String title;
     private String description;
     private Integer goalAmount;
-    private LocalDate deadline;
+    private LocalDate startLine;
+    private LocalDate deadLine;
     private Long categoryNo;
+    private String accountNumber;
     private List<RewardRequestDTO> rewards;
 }
 

@@ -15,7 +15,8 @@ public class ProjectListResponseDTO {
     private String thumbnailUrl;
     private Integer goalAmount;
     private Integer currentAmount;
-    private String deadline;
+    private String startLine;
+    private String deadLine;
     private String categoryName;
     private int percent;
 }
