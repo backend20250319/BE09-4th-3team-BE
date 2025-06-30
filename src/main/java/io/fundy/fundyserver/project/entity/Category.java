@@ -20,7 +20,7 @@ public class Category {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long category_no; // 카테고리 ID
+    private Long categoryNo; // 카테고리 ID
 
     @Column(nullable = false, length = 50)
     private String name; // 카테고리 이름
