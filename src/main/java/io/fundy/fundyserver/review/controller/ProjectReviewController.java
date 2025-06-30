@@ -5,10 +5,13 @@ import io.fundy.fundyserver.review.dto.ReviewRequestDTO;
 import io.fundy.fundyserver.review.dto.ReviewResponseDTO;
 import io.fundy.fundyserver.review.service.ProjectReviewService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/reviews")
@@ -25,10 +28,20 @@ public class ProjectReviewController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-//    // 특정 프로젝트 리뷰 리스트 조회
-//    @GetMapping("/project/{projectNo}")
-//    public ResponseEntity<List<ReviewResponseDTO>> getReviews(@PathVariable Long projectNo) {
-//        List<ReviewResponseDTO> reviews = reviewService.getReviewsByProjectNo(projectNo);
-//        return ResponseEntity.ok(reviews);
-//    }
+    // 전체 후기 조회
+    @GetMapping("/project/{projectNo}")
+    public ResponseEntity<Page<ReviewResponseDTO>> getReviews(
+            @PathVariable Long projectNo,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+        Page<ReviewResponseDTO> reviews = reviewService.getReviewsByProjectNo(projectNo, page, size);
+        return ResponseEntity.ok(reviews);
+    }
+
+    // 미리보기용: 최신 5개
+    @GetMapping("/project/{projectNo}/preview")
+    public ResponseEntity<List<ReviewResponseDTO>> getReviewPreview(@PathVariable Long projectNo) {
+        List<ReviewResponseDTO> preview = reviewService.getPreviewReviews(projectNo, 5);
+        return ResponseEntity.ok(preview);
+    }
 }
