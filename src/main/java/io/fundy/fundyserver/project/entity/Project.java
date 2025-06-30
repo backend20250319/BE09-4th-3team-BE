@@ -39,14 +39,20 @@ public class Project {
     @Column(nullable = false)
     private String description; // 상세 설명
 
+    @Column(name = "account_number", nullable = false, length = 50)
+    private String accountNumber; // 입금 계좌번호
+
     @Column(name = "goal_amount", nullable = false)
     private Integer goalAmount; // 목표 금액
 
     @Column(name = "current_amount", nullable = false)
     private Integer currentAmount = 0; // 현재 후원 금액
 
-    @Column(nullable = false)
-    private LocalDate deadline; // 마감일
+    @Column(name = "start_line", nullable = false)
+    private LocalDate startLine; // 시작일
+
+    @Column(name = "dead_line", nullable = false)
+    private LocalDate deadLine; // 마감일
 
     @Enumerated(EnumType.STRING)
     @Column(name = "product_status", nullable = false, length = 30)
@@ -91,9 +97,11 @@ public class Project {
         project.category = category;
         project.title = dto.getTitle();
         project.description = dto.getDescription();
+        project.accountNumber = dto.getAccountNumber();
         project.goalAmount = dto.getGoalAmount();
         project.currentAmount = 0;
-        project.deadline = dto.getDeadline();
+        project.startLine = dto.getStartLine();
+        project.deadLine = dto.getDeadLine();
         project.productStatus = ProjectStatus.WAITING_APPROVAL;
         project.viewCount = 0;
         project.createdAt = LocalDateTime.now();

@@ -1,9 +1,6 @@
 package io.fundy.fundyserver.project.service;
 
-import io.fundy.fundyserver.project.dto.project.ProjectListPageResponseDTO;
-import io.fundy.fundyserver.project.dto.project.ProjectListResponseDTO;
-import io.fundy.fundyserver.project.dto.project.ProjectRequestDTO;
-import io.fundy.fundyserver.project.dto.project.ProjectResponseDTO;
+import io.fundy.fundyserver.project.dto.project.*;
 import io.fundy.fundyserver.project.dto.reward.RewardRequestDTO;
 import io.fundy.fundyserver.project.entity.Category;
 import io.fundy.fundyserver.project.entity.Project;
@@ -31,6 +28,12 @@ public class ProjectService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
 
+    /***
+     * 프로젝트 등록
+     * @param dto
+     * @param userId
+     * @return
+     */
     @Transactional
     public ProjectResponseDTO createService(ProjectRequestDTO dto, String userId) {
 
@@ -52,6 +55,12 @@ public class ProjectService {
         return new ProjectResponseDTO(saved.getProjectNo(), saved.getProductStatus().name());
     }
 
+    /***
+     * 프로젝트 목록 조회
+     * @param page
+     * @param size
+     * @return
+     */
     public ProjectListPageResponseDTO getProjects(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Project> projectPage = projectRepository.findAll(pageable);
@@ -67,7 +76,8 @@ public class ProjectService {
                         p.getThumbnailUrl(),
                         p.getGoalAmount(),
                         p.getCurrentAmount(),
-                        p.getDeadline().toString(),
+                        p.getStartLine().toString(),
+                        p.getDeadLine().toString(),
                         p.getCategory().getName(),
                         calculatePercent(p)
                 )).toList();
@@ -85,6 +95,19 @@ public class ProjectService {
     private int calculatePercent(Project project) {
         if (project.getGoalAmount() == 0) return 0;
         return (int) ((project.getCurrentAmount() / (double) project.getGoalAmount()) * 100);
+    }
+
+    /***
+     * 프로젝트 상세 조회
+     * @param projectNo
+     * @return
+     */
+    @Transactional(readOnly = true)
+    public ProjectDetailResponseDTO getProjectById(Long projectNo) {
+        Project project = projectRepository.findById(projectNo)
+                .orElseThrow(() -> new ApiException(ErrorCode.PROJECT_NOT_FOUND));
+
+        return ProjectDetailResponseDTO.from(project); // 정적 팩토리 메서드 또는 생성자 방식
     }
 }
 

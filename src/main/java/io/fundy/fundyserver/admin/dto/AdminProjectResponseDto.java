@@ -16,9 +16,11 @@ public class AdminProjectResponseDto {
     private Long projectNo;
     private String title;
     private String description;
+    private String accountNumber;
     private Integer goalAmount;
     private Integer currentAmount;
-    private LocalDate deadline;
+    private LocalDate startLine;
+    private LocalDate deadLine;
     private String productStatus;
     private String thumbnailUrl;
     private Integer viewCount;
@@ -35,7 +37,8 @@ public class AdminProjectResponseDto {
                 .description(project.getDescription())
                 .goalAmount(project.getGoalAmount())
                 .currentAmount(project.getCurrentAmount())
-                .deadline(project.getDeadline())
+                .startLine(project.getStartLine())
+                .deadLine(project.getDeadLine())
                 .productStatus(project.getProductStatus().name())
                 .thumbnailUrl(project.getThumbnailUrl())
                 .viewCount(project.getViewCount())

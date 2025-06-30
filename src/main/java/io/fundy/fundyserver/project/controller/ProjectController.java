@@ -1,5 +1,6 @@
 package io.fundy.fundyserver.project.controller;
 
+import io.fundy.fundyserver.project.dto.project.ProjectDetailResponseDTO;
 import io.fundy.fundyserver.project.dto.project.ProjectListPageResponseDTO;
 import io.fundy.fundyserver.project.dto.project.ProjectRequestDTO;
 import io.fundy.fundyserver.project.dto.project.ProjectResponseDTO;
@@ -20,6 +21,12 @@ public class ProjectController {
 
     private final ProjectService projectService;
 
+    /***
+     * 프로젝트 등록
+     * @param requestDTO
+     * @param user
+     * @return
+     */
     @PostMapping("/project")
     public ResponseEntity<ProjectResponseDTO> createProject(
             @Valid @RequestBody ProjectRequestDTO requestDTO,
@@ -31,6 +38,12 @@ public class ProjectController {
         return ResponseEntity.status(201).body(response);
     }
 
+    /***
+     * 프로젝트 목록 조회
+     * @param page
+     * @param size
+     * @return
+     */
     @GetMapping("/project/list")
     public ResponseEntity<?> getProjectList(
             @RequestParam(defaultValue = "0") int page,
@@ -47,4 +60,14 @@ public class ProjectController {
         );
     }
 
+    /***
+     * 프로젝트 상세 조회
+     * @param projectNo
+     * @return
+     */
+    @GetMapping("/project/{projectNo}")
+    public ResponseEntity<?> getProjectDetail(@PathVariable Long projectNo) {
+        ProjectDetailResponseDTO responseDTO = projectService.getProjectById(projectNo);
+        return ResponseEntity.ok().body(Map.of("success", true, "data", responseDTO));
+    }
 }
