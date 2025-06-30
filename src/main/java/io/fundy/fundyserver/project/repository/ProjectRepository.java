@@ -3,6 +3,7 @@ package io.fundy.fundyserver.project.repository;
 import io.fundy.fundyserver.project.entity.Project;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,4 +13,7 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
 
     // Admin project 추가 부분
     Page<Project> findByCategory_CategoryNo(Long categoryNo, Pageable pageable);
+
+    @EntityGraph(attributePaths = "category")
+    Page<Project> findAll(Pageable pageable);
 }

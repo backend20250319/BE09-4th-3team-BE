@@ -29,7 +29,7 @@ public class Project {
     private User user; // 등록한 창작자 (회원)
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
+    @JoinColumn(name = "category_no", nullable = false)
     private Category category; // 카테고리
 
     @Column(nullable = false, length = 100)

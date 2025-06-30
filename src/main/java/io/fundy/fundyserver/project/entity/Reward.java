@@ -16,7 +16,7 @@ public class Reward {
     private Long rewardNo; // 리워드 ID
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "project_id", nullable = false)
+    @JoinColumn(name = "project_no", nullable = false)
     private Project project; // 소속 프로젝트
 
     @Column(nullable = false, length = 100)
