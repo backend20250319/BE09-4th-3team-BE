@@ -44,4 +44,16 @@ public class ProjectReviewController {
         List<ReviewResponseDTO> preview = reviewService.getPreviewReviews(projectNo, 5);
         return ResponseEntity.ok(preview);
     }
+
+    // 리뷰 수정
+    @PutMapping("/{reviewNo}")
+    public ResponseEntity<ReviewResponseDTO> updateReview(
+            @PathVariable Long reviewNo,
+            @RequestBody ReviewRequestDTO dto,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        Integer userNo = userDetails.getUser().getUserNo();
+        ReviewResponseDTO updated = reviewService.updateReview(reviewNo, dto, userNo);
+        return ResponseEntity.ok(updated);
+    }
 }

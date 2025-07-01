@@ -96,6 +96,40 @@ public class ProjectReviewService {
                 .collect(Collectors.toList());
     }
 
+    // 리뷰 수정
+    @Transactional
+    public ReviewResponseDTO updateReview(Long reviewNo, ReviewRequestDTO dto, Integer userNo) {
+        // 1. user 가져오기 (필요)
+        User user = userRepository.findById(userNo)
+                .orElseThrow(() -> new ReviewException(ReviewErrorCode.USER_NOT_FOUND));
+
+        // 2. 리뷰 조회
+        ProjectReview review = projectReviewRepository.findById(reviewNo)
+                .orElseThrow(() -> new ReviewException(ReviewErrorCode.REVIEW_NOT_FOUND));
+
+        // 3. 작성자가 맞는지 확인
+        if (!review.getUser().getUserNo().equals(userNo)) {
+            throw new ReviewException(ReviewErrorCode.UNAUTHORIZED_REVIEW_ACCESS);
+        }
+
+        // 4. 참여 여부 체크
+        boolean isParticipant = participationRepository.existsByUser_UserNoAndProject_ProjectNo(userNo, dto.getProjectNo());
+        if (!isParticipant) {
+            throw new ReviewException(ReviewErrorCode.USER_NOT_PARTICIPATED);
+        }
+
+        // 5. 리뷰 수정
+        review.updateReview(
+                dto.getRewardStatus().getValue(),
+                dto.getPlanStatus().getValue(),
+                dto.getCommStatus().getValue(),
+                dto.getContent(),
+                null
+        );
+
+        return toDTO(review);
+    }
+
     private ReviewResponseDTO toDTO(ProjectReview review) {
         return new ReviewResponseDTO(
                 review.getReviewNo(),
@@ -106,7 +140,8 @@ public class ProjectReviewService {
                 review.getCommStatus(),
                 review.getContent(),
                 review.getImageUrl(),
-                review.getCreatedAt()
+                review.getCreatedAt(),
+                review.getUpdatedAt()  // 추가
         );
     }
 }
