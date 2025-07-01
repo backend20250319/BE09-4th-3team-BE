@@ -1,5 +1,6 @@
 package io.fundy.fundyserver.register.entity;
 
+import io.fundy.fundyserver.register.entity.RoleType;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -35,16 +36,16 @@ public class User {
     private String nickname;
 
     // 전화번호
-    @Column(length = 20, nullable = false)
+    @Column(length = 20, nullable = false, unique = true)
     private String phone;
 
     // 주소 (선택 입력)
     @Column(length = 200)
     private String address;
 
-    // 계좌번호 (선택 입력)
-    @Column(name = "account_number", length = 30)
-    private String accountNumber;
+    // 상세 주소
+    @Column(name = "address_detail")
+    private String addressDetail;
 
     // 로그인/로그아웃/BANNED 상태
     @Enumerated(EnumType.STRING)

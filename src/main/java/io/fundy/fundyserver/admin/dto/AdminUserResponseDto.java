@@ -33,7 +33,7 @@ public class AdminUserResponseDto {
                 .nickname(user.getNickname())
                 .phone(user.getPhone())
                 .address(user.getAddress())
-                .accountNumber(user.getAccountNumber())
+//                .accountNumber(user.getAccountNumber())
                 .userStatus(user.getUserStatus().name())       // Enum -> String
                 .roleType(user.getRoleType().name())           // Enum -> String
                 .createdAt(formatDate(user.getCreatedAt()))    // LocalDateTime -> String
