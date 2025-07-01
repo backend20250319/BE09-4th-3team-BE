@@ -26,6 +26,8 @@ spring:
       hibernate:
         format_sql: true
         show_sql: true
+        naming:
+          physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
     database-platform: org.hibernate.dialect.MySQL8Dialect
 
   data:
@@ -39,8 +41,15 @@ logging:
     root: info
     org.hibernate.SQL: debug
     org.hibernate.type: trace
+    org.springframework.web: DEBUG
+    io.fundy.fundyserver: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
+    org.thymeleaf: TRACE
 
   web:
     resources:
       add-mappings: false
 
+frontend:
+  url: http://localhost:3000

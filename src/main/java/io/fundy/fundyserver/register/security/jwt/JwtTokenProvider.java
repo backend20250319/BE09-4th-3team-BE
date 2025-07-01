@@ -1,8 +1,8 @@
 package io.fundy.fundyserver.register.security.jwt;
 
+import io.fundy.fundyserver.register.entity.RoleType;
 import io.fundy.fundyserver.register.exception.ApiException;
 import io.fundy.fundyserver.register.exception.ErrorCode;
-import io.fundy.fundyserver.register.entity.RoleType;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -22,38 +22,38 @@ public class JwtTokenProvider {
 
     @PostConstruct
     public void init() {
-        // HS256에 적합한 키 생성 (256bit 이상)
         this.secretKey = Keys.hmacShaKeyFor(props.getSecret().getBytes(StandardCharsets.UTF_8));
     }
 
     /** Access Token 생성 */
     public String createAccessToken(String userId, RoleType role) {
-        Date now = new Date();
-        Date exp = new Date(now.getTime() + props.getAccessTokenExpireMs());
-
-        return Jwts.builder()
-                .subject(userId)
-                .claim("role", role.name())
-                .issuedAt(now)
-                .expiration(exp)
-                .signWith(secretKey, Jwts.SIG.HS256)
-                .compact();
+        return buildToken(userId, props.getAccessTokenExpireMs(), role);
     }
 
-    // Refresh Token 생성
+    /** Refresh Token 생성 (Role 없이 생성) */
     public String createRefreshToken(String userId) {
-        Date now = new Date();
-        Date exp = new Date(now.getTime() + props.getRefreshTokenExpireMs());
+        return buildToken(userId, props.getRefreshTokenExpireMs(), null);
+    }
 
-        return Jwts.builder()
+    /** 공통 토큰 생성 로직 */
+    private String buildToken(String userId, long expirationMs, RoleType role) {
+        Date now = new Date();
+        Date exp = new Date(now.getTime() + expirationMs);
+
+        JwtBuilder builder = Jwts.builder()
                 .subject(userId)
                 .issuedAt(now)
                 .expiration(exp)
-                .signWith(secretKey, Jwts.SIG.HS256)
-                .compact();
+                .signWith(secretKey, Jwts.SIG.HS256);
+
+        if (role != null) {
+            builder.claim("role", role.name());
+        }
+
+        return builder.compact();
     }
 
-    // 토큰 유효성 검증
+    /** 토큰 유효성 검증 */
     public boolean validateToken(String token) {
         try {
             parseClaims(token);
@@ -63,18 +63,18 @@ public class JwtTokenProvider {
         }
     }
 
-    // 사용자 ID 추출
+    /** 사용자 ID(email) 추출 */
     public String getUserId(String token) {
         return parseClaims(token).getPayload().getSubject();
     }
 
-    // 역할(RoleType) 추출
+    /** 역할(UserRole) 추출 */
     public RoleType getRole(String token) {
         String role = parseClaims(token).getPayload().get("role", String.class);
         return RoleType.valueOf(role);
     }
 
-    // Claims 파싱 및 예외 처리
+    /** Claims 파싱 (예외 핸들링 포함) */
     private Jws<Claims> parseClaims(String token) {
         try {
             return Jwts.parser()
@@ -87,11 +87,13 @@ public class JwtTokenProvider {
             throw new ApiException(ErrorCode.INVALID_TOKEN);
         }
     }
+
+    /** RefreshToken 만료 시간 반환 */
     public long getRefreshTokenExpiryMs() {
         return props.getRefreshTokenExpireMs();
     }
 
-    // 외부에서 props 값 참조
+    /** 설정 반환 */
     public JwtProperties getProps() {
         return props;
     }
