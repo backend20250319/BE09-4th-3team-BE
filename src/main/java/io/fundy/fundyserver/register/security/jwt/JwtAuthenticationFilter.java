@@ -25,7 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-@Slf4j
+@Slf4j  // ← 1. 로거 추가 (기존 @Slf4j 유지)
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
@@ -50,7 +50,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        return skipPaths.stream().anyMatch(pattern -> pathMatcher.match(pattern, path));
+        boolean skip = skipPaths.stream().anyMatch(pattern -> pathMatcher.match(pattern, path));
+        log.debug("shouldNotFilter? [{}] -> {}", path, skip);  // ← 2. 디버깅용 로그 추가
+        return skip;
     }
 
     @Override
@@ -60,44 +62,53 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        // 1. Header 또는 Cookie에서 토큰 추출
+        // 1) 토큰 추출
         String token = resolveToken(request);
+        log.debug("Resolved token: {}", token);  // ← 3. 추출된 토큰 로그
 
-        if (token != null && tokenProvider.validateToken(token)) {
+        // 2) 보호된 경로면 토큰 없거나 유효하지 않을 때 바로 401 응답
+        if (!shouldNotFilter(request)) {
+            if (token == null) {
+                log.warn("[JWT 인증 실패] 토큰 누락: {}", request.getServletPath());
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authorization 토큰이 필요합니다.");
+                return;  // 체인 종료
+            }
+            if (!tokenProvider.validateToken(token)) {
+                log.warn("[JWT 인증 실패] 토큰 유효성 검증 실패: {}", token);
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "유효하지 않은 토큰입니다.");
+                return;  // 체인 종료
+            }
+
+            // 3) 토큰이 유효하면 userId 추출 → 인증 컨텍스트 설정
             String userId = tokenProvider.getUserId(token);
-
-            // 2. 일반 회원 인증 시도 → 실패하면 OAuth 회원 인증 시도
             boolean authenticated = tryUserAuth(userId, token) || tryOAuthUserAuth(userId, token);
-
             if (authenticated) {
-                log.info("[JWT 인증 성공] userId(email): {}", userId);
+                log.info("[JWT 인증 성공] userId: {}", userId);
             } else {
-                log.warn("[JWT 인증 실패] 토큰은 유효하지만 사용자 정보 없음: {}", userId);
+                log.warn("[JWT 인증 실패] 유효한 토큰이나 사용자 없음: {}", userId);
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "사용자를 찾을 수 없습니다.");
+                return;
             }
         }
 
+        // 4) 다음 필터/컨트롤러로 진행
         filterChain.doFilter(request, response);
     }
 
     /** JWT를 Header 또는 Cookie에서 추출 */
     private String resolveToken(HttpServletRequest request) {
-        // 1-1. Authorization 헤더
         String header = request.getHeader("Authorization");
         if (header != null && header.toLowerCase().startsWith("bearer ")) {
             return header.substring(7);
         }
-
-        // 1-2. accessToken 쿠키
         if (request.getCookies() != null) {
-            Optional<Cookie> accessTokenCookie = Arrays.stream(request.getCookies())
+            Optional<Cookie> cookie = Arrays.stream(request.getCookies())
                     .filter(c -> "accessToken".equals(c.getName()))
                     .findFirst();
-
-            if (accessTokenCookie.isPresent()) {
-                return accessTokenCookie.get().getValue();
+            if (cookie.isPresent()) {
+                return cookie.get().getValue();
             }
         }
-
         return null;
     }
 
@@ -111,11 +122,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }).orElse(false);
     }
 
-    /** OAuth 회원 인증 (BAN 상태 체크 포함) */
+    /** OAuth 회원 인증 */
     private boolean tryOAuthUserAuth(String email, String token) {
         return oauthUserRepo.findByEmail(email)
                 .map(user -> {
-                    if (user.getRole() != null && user.getRole().name().equalsIgnoreCase("BAN")) {
+                    if (user.getRole() != null && "BAN".equalsIgnoreCase(user.getRole().name())) {
                         throw new ApiException(ErrorCode.BANNED_USER);
                     }
                     CustomOAuthUserDetails principal = new CustomOAuthUserDetails(user);
