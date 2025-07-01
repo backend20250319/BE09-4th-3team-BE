@@ -2,6 +2,7 @@ package io.fundy.fundyserver.register.controller;
 
 import io.fundy.fundyserver.register.dto.*;
 import io.fundy.fundyserver.register.entity.RefreshToken;
+import io.fundy.fundyserver.register.entity.User;
 import io.fundy.fundyserver.register.entity.UserStatus;
 import io.fundy.fundyserver.register.exception.ApiException;
 import io.fundy.fundyserver.register.exception.ErrorCode;
@@ -25,14 +26,14 @@ public class RegisterController {
     private final JwtTokenProvider jwtProvider;
     private final RefreshTokenRepository refreshRepo;
 
-    // 회원가입 컨트롤러
+    // ✅ 회원가입
     @PostMapping("/signup")
     public ResponseEntity<UserResponseDTO> signup(@Valid @RequestBody UserRequestDTO req) {
         UserResponseDTO res = userService.signup(req);
         return ResponseEntity.status(HttpStatus.CREATED).body(res);
     }
 
-    // 로그인 컨트롤러 : 토큰 발급
+    // ✅ 로그인
     @PostMapping("/login")
     public ResponseEntity<TokenResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginReq) {
         UserResponseDTO user = userService.login(loginReq.getUserId(), loginReq.getPassword());
@@ -40,7 +41,6 @@ public class RegisterController {
         String accessToken = jwtProvider.createAccessToken(user.getUserId(), user.getRoleType());
         String refreshToken = jwtProvider.createRefreshToken(user.getUserId());
 
-        // Refresh Token 저장 또는 갱신
         RefreshToken tokenEntity = refreshRepo.findById(user.getUserId())
                 .map(rt -> rt.toBuilder()
                         .token(refreshToken)
@@ -63,88 +63,88 @@ public class RegisterController {
         return ResponseEntity.ok(tokens);
     }
 
-    // 유저 조회 컨트롤러 - 권한 필수 (경로 기반)
-    @GetMapping("/user")
+    // ✅ 유저 조회 (ID로)
+    @GetMapping("/user/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Integer id) {
         UserResponseDTO user = userService.getUserById(id);
         return ResponseEntity.ok(user);
     }
 
-    // 유저 본인 정보 조회 컨트롤러
+    // ✅ 현재 로그인 유저
     @GetMapping("/user/me")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<UserResponseDTO> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
-        String token = authHeader.replace("Bearer ", "");
+        String token  = authHeader.replace("Bearer ", "");
         String userId = jwtProvider.getUserId(token);
         UserResponseDTO user = userService.getUserByUserId(userId);
         return ResponseEntity.ok(user);
     }
 
-    // 마이페이지 수정 컨트롤러
+    // ✅ 유저 정보 수정
     @PatchMapping("/user/me/update")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<UserResponseDTO> updateCurrentUser(
             @RequestHeader("Authorization") String authHeader,
             @Valid @RequestBody UserRequestDTO req
     ) {
-        String token = authHeader.replace("Bearer ", "");
+        String token  = authHeader.replace("Bearer ", "");
         String userId = jwtProvider.getUserId(token);
-        Integer id = userService.getUserByUserId(userId).getUserNo();
+        Integer id    = userService.getUserByUserId(userId).getUserNo();
 
-        UserResponseDTO updatedUser = userService.updateUser(id, req);
-        return ResponseEntity.ok(updatedUser);
+        UserResponseDTO updated = userService.updateUser(id, req);
+        return ResponseEntity.ok(updated);
     }
 
-    // 로그아웃 컨트롤러
-    @PostMapping("user/me/logout")
+    // ✅ 로그아웃
+    @PostMapping("/user/me/logout")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<String> logout(@RequestHeader("Authorization") String authHeader) {
-        String token = authHeader.replace("Bearer ", "");
+        String token  = authHeader.replace("Bearer ", "");
         String userId = jwtProvider.getUserId(token);
         userService.logout(userId);
         return ResponseEntity.ok("로그아웃이 성공 하였습니다.");
     }
 
-    // 비밀번호 변경 컨트롤러
+    // ✅ 비밀번호 변경
     @PatchMapping("/user/me/password_update")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<String> changePassword(
             @RequestHeader("Authorization") String authHeader,
             @Valid @RequestBody PasswordChangeRequestDTO req
     ) {
-        String token = authHeader.replace("Bearer ", "");
+        String token  = authHeader.replace("Bearer ", "");
         String userId = jwtProvider.getUserId(token);
-        Integer id = userService.getUserByUserId(userId).getUserNo();
+        Integer id    = userService.getUserByUserId(userId).getUserNo();
 
         userService.changePassword(id, req);
         return ResponseEntity.ok("비밀번호 변경 하였습니다.");
     }
 
-    //  회원 탈퇴 컨트롤러
+    // ✅ 회원 탈퇴
     @DeleteMapping("/user/me_quit")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<String> deleteAccount(@RequestHeader("Authorization") String authHeader) {
-        String token = authHeader.replace("Bearer ", "");
+        String token  = authHeader.replace("Bearer ", "");
         String userId = jwtProvider.getUserId(token);
-        Integer id = userService.getUserByUserId(userId).getUserNo();
+        Integer id    = userService.getUserByUserId(userId).getUserNo();
 
-        userService.updateUserStatus(id, UserStatus.QUIT); // Soft delete 처리
+        userService.updateUserStatus(id, UserStatus.QUIT);
         return ResponseEntity.ok("회원 탈퇴 처리 되었습니다.");
     }
 
-    // 토큰 리프레시 컨트롤러
+    // ✅ 토큰 재발급
     @PostMapping("/refresh")
     public ResponseEntity<TokenResponseDTO> refresh(@Valid @RequestBody RefreshTokenRequestDTO req) {
-        RefreshToken stored = refreshRepo.findById(req.getRefreshToken())
+        RefreshToken stored = refreshRepo.findByToken(req.getRefreshToken())
                 .orElseThrow(() -> new ApiException(ErrorCode.INVALID_TOKEN));
 
         if (stored.getExpiryDate().isBefore(Instant.now())) {
             throw new ApiException(ErrorCode.TOKEN_EXPIRED);
         }
 
-        String userId = jwtProvider.getUserId(stored.getToken());
-        String newAccess = jwtProvider.createAccessToken(userId, jwtProvider.getRole(stored.getToken()));
+        String userId     = jwtProvider.getUserId(stored.getToken());
+        String newAccess  = jwtProvider.createAccessToken(userId, jwtProvider.getRole(stored.getToken()));
         String newRefresh = jwtProvider.createRefreshToken(userId);
 
         stored.setToken(newRefresh);
@@ -156,5 +156,29 @@ public class RegisterController {
                 .refreshToken(newRefresh)
                 .build();
         return ResponseEntity.ok(res);
+    }
+
+    // ✅ 아이디 중복 확인
+    @GetMapping("/check-user-id")
+    public ResponseEntity<Boolean> checkUserId(@RequestParam String userId) {
+        return ResponseEntity.ok(userService.isUserIdDuplicate(userId));
+    }
+
+    // ✅ 닉네임 중복 확인
+    @GetMapping("/check-nickname")
+    public ResponseEntity<Boolean> checkNickname(@RequestParam String nickname) {
+        return ResponseEntity.ok(userService.isNicknameDuplicate(nickname));
+    }
+
+    // ✅ 이메일 중복 확인
+    @GetMapping("/check-email")
+    public ResponseEntity<Boolean> checkEmail(@RequestParam String email) {
+        return ResponseEntity.ok(userService.isEmailDuplicate(email));
+    }
+
+    // ✅ 전화번호 중복 확인
+    @GetMapping("/check-phone")
+    public ResponseEntity<Boolean> checkPhone(@RequestParam String phone) {
+        return ResponseEntity.ok(userService.isPhoneDuplicate(phone));
     }
 }
