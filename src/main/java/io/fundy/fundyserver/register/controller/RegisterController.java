@@ -1,8 +1,8 @@
+// ✅ RegisterController.java
 package io.fundy.fundyserver.register.controller;
 
 import io.fundy.fundyserver.register.dto.*;
 import io.fundy.fundyserver.register.entity.RefreshToken;
-import io.fundy.fundyserver.register.entity.User;
 import io.fundy.fundyserver.register.entity.UserStatus;
 import io.fundy.fundyserver.register.exception.ApiException;
 import io.fundy.fundyserver.register.exception.ErrorCode;
@@ -11,12 +11,14 @@ import io.fundy.fundyserver.register.security.jwt.JwtTokenProvider;
 import io.fundy.fundyserver.register.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/register")
 @RequiredArgsConstructor
@@ -36,22 +38,24 @@ public class RegisterController {
     // ✅ 로그인
     @PostMapping("/login")
     public ResponseEntity<TokenResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginReq) {
+        log.info("✅ 로그인 요청 수신: userId={}, password=****", loginReq.getUserId());
+
         UserResponseDTO user = userService.login(loginReq.getUserId(), loginReq.getPassword());
+        log.info("✅ 로그인 성공: userNo={}, nickname={}, role={}", user.getUserNo(), user.getNickname(), user.getRoleType());
 
         String accessToken = jwtProvider.createAccessToken(user.getUserId(), user.getRoleType());
         String refreshToken = jwtProvider.createRefreshToken(user.getUserId());
+        log.info("✅ JWT 생성 완료");
 
         RefreshToken tokenEntity = refreshRepo.findById(user.getUserId())
-                .map(rt -> rt.toBuilder()
-                        .token(refreshToken)
-                        .expiryDate(Instant.now().plusMillis(jwtProvider.getRefreshTokenExpiryMs()))
-                        .build())
-                .orElse(RefreshToken.builder()
+                                .orElse(RefreshToken.builder()
                         .userId(user.getUserId())
                         .token(refreshToken)
                         .expiryDate(Instant.now().plusMillis(jwtProvider.getRefreshTokenExpiryMs()))
                         .build());
+
         refreshRepo.save(tokenEntity);
+        log.info("✅ RefreshToken 저장 완료");
 
         long expiresInMs = jwtProvider.getProps().getAccessTokenExpireMs();
         TokenResponseDTO tokens = TokenResponseDTO.builder()
@@ -60,18 +64,11 @@ public class RegisterController {
                 .accessTokenExpiresIn(expiresInMs)
                 .build();
 
+        log.info("✅ 로그인 처리 완료 → 토큰 응답 반환");
         return ResponseEntity.ok(tokens);
     }
 
-    // ✅ 유저 조회 (ID로)
-    @GetMapping("/user/{id}")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Integer id) {
-        UserResponseDTO user = userService.getUserById(id);
-        return ResponseEntity.ok(user);
-    }
-
-    // ✅ 현재 로그인 유저
+    // ✅ 현재 로그인 유저 정보 (JWT 기반, **이것만 남김**)
     @GetMapping("/user/me")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<UserResponseDTO> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
@@ -100,10 +97,17 @@ public class RegisterController {
     @PostMapping("/user/me/logout")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<String> logout(@RequestHeader("Authorization") String authHeader) {
-        String token  = authHeader.replace("Bearer ", "");
-        String userId = jwtProvider.getUserId(token);
-        userService.logout(userId);
-        return ResponseEntity.ok("로그아웃이 성공 하였습니다.");
+        try {
+            String token  = authHeader.replace("Bearer ", "");
+            String userId = jwtProvider.getUserId(token);
+            log.info("로그아웃 요청 userId: {}", userId);
+            userService.logout(userId);
+            log.info("로그아웃 성공 userId: {}", userId);
+            return ResponseEntity.ok("로그아웃이 성공 하였습니다.");
+        } catch (Exception e) {
+            log.error("로그아웃 중 에러: {}", e.getMessage(), e);
+            throw e; // 기존 핸들러에서 처리됨
+        }
     }
 
     // ✅ 비밀번호 변경

@@ -14,7 +14,7 @@ import java.time.Instant;
 public class RefreshToken {
 
     @Id
-    @Column(name = "user_id", nullable = false, unique = true)
+    @Column(name = "user_id", nullable = false)
     private String userId;
 
     @Column(nullable = false, unique = true)
@@ -23,7 +23,7 @@ public class RefreshToken {
     @Column(nullable = false)
     private Instant expiryDate;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", referencedColumnName = "user_id")
     private User user;
 }
