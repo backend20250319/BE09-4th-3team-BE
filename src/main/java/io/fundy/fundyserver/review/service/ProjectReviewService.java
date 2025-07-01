@@ -126,6 +126,27 @@ public class ProjectReviewService {
         return toDTO(review);
     }
 
+    @Transactional
+    public void deleteReview(Long reviewNo, Integer userNo) {
+        ProjectReview review = projectReviewRepository.findById(reviewNo)
+                .orElseThrow(() -> new ReviewException(ReviewErrorCode.REVIEW_NOT_FOUND));
+
+        // 작성자 확인
+        if (!review.getUser().getUserNo().equals(userNo)) {
+            throw new ReviewException(ReviewErrorCode.UNAUTHORIZED_REVIEW_ACCESS);
+        }
+
+        // 참여 여부 확인
+        boolean isParticipant = participationRepository.existsByUser_UserNoAndProject_ProjectNo(userNo, review.getProject().getProjectNo());
+        if (!isParticipant) {
+            throw new ReviewException(ReviewErrorCode.USER_NOT_PARTICIPATED);
+        }
+
+        // 삭제
+        projectReviewRepository.delete(review);
+    }
+
+
     private ReviewResponseDTO toDTO(ProjectReview review) {
         return new ReviewResponseDTO(
                 review.getReviewNo(),

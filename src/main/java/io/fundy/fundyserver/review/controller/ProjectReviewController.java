@@ -56,4 +56,16 @@ public class ProjectReviewController {
         ReviewResponseDTO updated = reviewService.updateReview(reviewNo, dto, userNo);
         return ResponseEntity.ok(updated);
     }
+
+    // 리뷰 삭제
+    @DeleteMapping("/{reviewNo}")
+    public ResponseEntity<Void> deleteReview(
+            @PathVariable Long reviewNo,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        Integer userNo = userDetails.getUser().getUserNo();
+        reviewService.deleteReview(reviewNo, userNo);
+        return ResponseEntity.noContent().build();  // 204 No Content
+    }
+
 }
