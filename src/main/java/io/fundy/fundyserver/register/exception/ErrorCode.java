@@ -19,11 +19,13 @@ public enum ErrorCode {
     VERIFICATION_REQUIRED(HttpStatus.BAD_REQUEST, "전화번호 인증이 완료되지 않았습니다."),
     INVALID_PHONE_FORMAT(HttpStatus.BAD_REQUEST, "전화번호 형식이 잘못되었습니다."),
     UNEXPECTED_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "예기치 않은 오류가 발생했습니다."),
+    ALREADY_LOGGED_IN(HttpStatus.CONFLICT, "이미 로그인된 상태입니다."),
+
 
     // 추가된 오류 코드들
     PASSWORD_ENCRYPTION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "비밀번호 암호화에 실패했습니다."),
     DATABASE_SAVE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "사용자 저장에 실패했습니다."),
-    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다.");
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다."),;
 
     private final HttpStatus status;
     private final String message;
@@ -40,4 +42,5 @@ public enum ErrorCode {
     public String getMessage() {
         return message;
     }
+
 }
