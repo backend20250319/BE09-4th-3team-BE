@@ -63,10 +63,19 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        // ★ 공개 API만 나열, 나머지 /api/register/user/** 은 필터 적용
         List<String> skipPaths = List.of(
                 "/", "/favicon.ico",
-                "/api/register/**", "/api/login/**",
-                "/oauth2/authorization/**", "/login/oauth2/code/**",
+                "/api/register/signup",        // ← 수정: 전체가 아닌 개별
+                "/api/register/login",         // ← 수정
+                "/api/register/refresh",       // ← 수정
+                "/api/register/check-user-id", // ← 수정
+                "/api/register/check-email",   // ← 수정
+                "/api/register/check-nickname",// ← 수정
+                "/api/register/check-phone",   // ← 수정
+                "/api/register/password_update",
+                "/oauth2/authorization/**",
+                "/login/oauth2/code/**",
                 "/swagger-ui/**", "/v3/api-docs/**", "/h2-console/**",
                 "/css/**", "/js/**", "/images/**", "/uploads/**"
         );
@@ -83,15 +92,20 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // 정적 리소스
+                        .requestMatchers("/", "/favicon.ico", "/css/**", "/js/**", "/images/**", "/uploads/**")
+                        .permitAll()
+                        // 공개 API
                         .requestMatchers(
-                                "/", "/favicon.ico",
-                                "/css/**", "/js/**", "/images/**", "/uploads/**"
-                        ).permitAll()
-                        .requestMatchers(
-                                "/api/register/**", "/api/login/**",
-                                "/oauth2/authorization/**", "/login/oauth2/code/**",
-                                "/swagger-ui/**", "/v3/api-docs/**", "/h2-console/**"
-                        ).permitAll()
+                                "/api/register/signup",
+                                "/api/register/login",
+                                "/api/register/refresh",
+                                "/api/register/check-user-id",
+                                "/api/register/check-email",
+                                "/api/register/check-nickname",
+                                "/api/register/check-phone"
+                        ).permitAll()  // ← 수정
+                        // 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex
@@ -99,15 +113,9 @@ public class SecurityConfig {
                         .accessDeniedHandler(new AccessDeniedHandlerImpl())
                 )
                 .oauth2Login(oauth2 -> oauth2
-                        .authorizationEndpoint(endpoint -> endpoint
-                                .baseUri("/oauth2/authorization")
-                        )
-                        .redirectionEndpoint(endpoint -> endpoint
-                                .baseUri("/login/oauth2/code/*")
-                        )
-                        .userInfoEndpoint(ui -> ui
-                                .userService(customOAuth2UserService)
-                        )
+                        .authorizationEndpoint(endpoint -> endpoint.baseUri("/oauth2/authorization"))
+                        .redirectionEndpoint(endpoint -> endpoint.baseUri("/login/oauth2/code/*"))
+                        .userInfoEndpoint(ui -> ui.userService(customOAuth2UserService))
                         .successHandler(oAuth2SuccessHandler)
                         .failureHandler(oAuth2FailureHandler)
                 )

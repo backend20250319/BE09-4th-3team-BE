@@ -59,7 +59,7 @@ public class GlobalExceptionHandler {
         ErrorResponse body = ErrorResponse.builder()
                 .status(HttpStatus.BAD_REQUEST)
                 .error("BAD_REQUEST")
-                .message(ex.getMessage())
+                .message("요청 파라미터 형식이 잘못되었습니다.")
                 .errors(null)
                 .build();
         return ResponseEntity.badRequest().body(body);
