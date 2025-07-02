@@ -1,5 +1,6 @@
 package io.fundy.fundyserver.notification.entity;
 
+import io.fundy.fundyserver.project.entity.Project;
 import io.fundy.fundyserver.register.entity.User;
 
 import jakarta.persistence.*;
@@ -24,9 +25,9 @@ public class Notification {
     @JoinColumn(name = "user_no", nullable = false)
     private User user;
 
-    // @ManyToOne(fetch = FetchType.LAZY)
-    // @JoinColumn(name = "project_id", nullable = false)
-    // private Project project;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_no", nullable = false)
+    private Project project;
 
     @Column(name = "type", length = 50, nullable = false)
     private String type;
@@ -35,13 +36,18 @@ public class Notification {
     private String message;
 
     @Column(name = "is_read", nullable = false)
-    private Boolean isRead = false;
+    private Boolean isRead;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable =        false)
     private LocalDateTime createdAt;
 
     @PrePersist
     public void prePersist() {
-        this.createdAt = LocalDateTime.now();
+        if (isRead == null) {
+            isRead = false;
+        }
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
     }
 }
