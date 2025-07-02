@@ -7,6 +7,7 @@ import io.fundy.fundyserver.register.entity.User;
 import io.fundy.fundyserver.register.repository.UserRepository;
 import io.fundy.fundyserver.review.dto.ReviewRequestDTO;
 import io.fundy.fundyserver.review.dto.ReviewResponseDTO;
+import io.fundy.fundyserver.review.dto.ReviewUpdateResultDTO;
 import io.fundy.fundyserver.review.entity.ProjectReview;
 import io.fundy.fundyserver.review.exception.ReviewErrorCode;
 import io.fundy.fundyserver.review.exception.ReviewException;
@@ -20,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -98,32 +100,32 @@ public class ProjectReviewService {
 
     // 리뷰 수정
     @Transactional
-    public ReviewResponseDTO updateReview(Long reviewNo, ReviewRequestDTO dto, Integer userNo) {
-        // 1. 리뷰 조회
+    public ReviewUpdateResultDTO updateReview(Long reviewNo, ReviewRequestDTO dto, Integer userNo) {
         ProjectReview review = projectReviewRepository.findById(reviewNo)
                 .orElseThrow(() -> new ReviewException(ReviewErrorCode.REVIEW_NOT_FOUND));
 
-        // 2. 작성자가 맞는지 확인
         if (!review.getUser().getUserNo().equals(userNo)) {
             throw new ReviewException(ReviewErrorCode.UNAUTHORIZED_REVIEW_ACCESS);
         }
 
-        // 3. 프로젝트 참여 여부 확인
         boolean isParticipant = participationRepository.existsByUser_UserNoAndProject_ProjectNo(userNo, dto.getProjectNo());
         if (!isParticipant) {
             throw new ReviewException(ReviewErrorCode.USER_NOT_PARTICIPATED);
         }
 
-        // 4. 리뷰 내용 수정
+        ReviewResponseDTO beforeUpdate = toDTO(review);
+
         review.updateReview(
                 dto.getRewardStatus().getValue(),
                 dto.getPlanStatus().getValue(),
                 dto.getCommStatus().getValue(),
                 dto.getContent(),
-                null // 이미지 수정은 추후 개발 예정
+                null
         );
 
-        return toDTO(review);
+        ReviewResponseDTO afterUpdate = toDTO(review);
+
+        return new ReviewUpdateResultDTO(beforeUpdate, afterUpdate);
     }
 
     @Transactional

@@ -3,6 +3,7 @@ package io.fundy.fundyserver.review.controller;
 import io.fundy.fundyserver.register.security.CustomUserDetails;
 import io.fundy.fundyserver.review.dto.ReviewRequestDTO;
 import io.fundy.fundyserver.review.dto.ReviewResponseDTO;
+import io.fundy.fundyserver.review.dto.ReviewUpdateResultDTO;
 import io.fundy.fundyserver.review.service.ProjectReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -47,14 +48,14 @@ public class ProjectReviewController {
 
     // 리뷰 수정
     @PutMapping("/{reviewNo}")
-    public ResponseEntity<ReviewResponseDTO> updateReview(
+    public ResponseEntity<ReviewUpdateResultDTO> updateReview(
             @PathVariable Long reviewNo,
             @RequestBody ReviewRequestDTO dto,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         Integer userNo = userDetails.getUser().getUserNo();
-        ReviewResponseDTO updated = reviewService.updateReview(reviewNo, dto, userNo);
-        return ResponseEntity.ok(updated);
+        ReviewUpdateResultDTO result = reviewService.updateReview(reviewNo, dto, userNo);
+        return ResponseEntity.ok(result);
     }
 
     // 리뷰 삭제
