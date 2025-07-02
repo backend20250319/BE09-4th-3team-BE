@@ -4,9 +4,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fundy.fundyserver.notification.config.RabbitMQConfig;
 import io.fundy.fundyserver.notification.dto.NotificationMessageDTO;
+import io.fundy.fundyserver.project.entity.Project;
+import io.fundy.fundyserver.project.repository.ProjectRepository;
+import io.fundy.fundyserver.review.repository.ParticipationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
@@ -14,21 +19,73 @@ public class NotificationService {
 
     private final RabbitTemplate rabbitTemplate;
     private final ObjectMapper objectMapper;
+    private final ProjectRepository projectRepository;
+    private final ParticipationRepository participationRepository;
 
     // ① 후원 완료 알림
     public void sendSupportComplete(Integer userNo, Long projectNo, String projectTitle) {
+
+        projectRepository.findById(projectNo)
+                .orElseThrow(() -> new RuntimeException("프로젝트를 찾을 수 없습니다."));
+
+        // 유저-프로젝트 참여 검증 (후원했는지 확인)
+        boolean participated = participationRepository.existsByUser_UserNoAndProject_ProjectNo(userNo, projectNo);
+        if (!participated) {
+            throw new IllegalArgumentException("해당 유저는 이 프로젝트에 참여하지 않았습니다.");
+        }
+
         String message = projectTitle + " 프로젝트에 후원이 완료되었습니다.";
         sendToQueue("후원 완료", message, userNo, projectNo);
     }
 
-    // ② 프로젝트 성공 마감 알림
+    // 프로젝트 성공 마감 알림
     public void sendProjectSuccess(Integer userNo, Long projectNo, String projectTitle) {
+        Project project = projectRepository.findById(projectNo)
+                .orElseThrow(() -> new RuntimeException("프로젝트를 찾을 수 없습니다."));
+
+        // 유저-프로젝트 참여 검증
+        boolean participated = participationRepository.existsByUser_UserNoAndProject_ProjectNo(userNo, projectNo);
+        if (!participated) {
+            throw new IllegalArgumentException("해당 유저는 이 프로젝트에 참여하지 않았습니다.");
+        }
+
+        LocalDate today = LocalDate.now();
+        LocalDate deadline = project.getDeadLine();
+
+        if (!today.isAfter(deadline)) {
+            throw new IllegalStateException("프로젝트 마감일이 지나지 않았습니다.");
+        }
+
+        if (project.getCurrentAmount() < project.getGoalAmount()) {
+            throw new IllegalStateException("목표 금액이 채워지지 않았습니다.");
+        }
+
         String message = projectTitle + " 프로젝트가 성공적으로 종료되었습니다!";
         sendToQueue("프로젝트 마감 (성공)", message, userNo, projectNo);
     }
 
-    // ③ 프로젝트 실패 마감 알림
+    // 프로젝트 실패 마감 알림
     public void sendProjectFail(Integer userNo, Long projectNo, String projectTitle) {
+        Project project = projectRepository.findById(projectNo)
+                .orElseThrow(() -> new RuntimeException("프로젝트를 찾을 수 없습니다."));
+
+        // 유저-프로젝트 참여 검증
+        boolean participated = participationRepository.existsByUser_UserNoAndProject_ProjectNo(userNo, projectNo);
+        if (!participated) {
+            throw new IllegalArgumentException("해당 유저는 이 프로젝트에 참여하지 않았습니다.");
+        }
+
+        LocalDate today = LocalDate.now();
+        LocalDate deadline = project.getDeadLine();
+
+        if (!today.isAfter(deadline)) {
+            throw new IllegalStateException("프로젝트 마감일이 지나지 않았습니다.");
+        }
+
+        if (project.getCurrentAmount() >= project.getGoalAmount()) {
+            throw new IllegalStateException("프로젝트가 성공적으로 마감되었습니다.");
+        }
+
         String message = projectTitle + " 프로젝트가 목표 금액 미달로 종료되었습니다. 후원이 취소됩니다.";
         sendToQueue("프로젝트 마감 (실패)", message, userNo, projectNo);
     }
