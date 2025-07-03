@@ -1,14 +1,17 @@
 package io.fundy.fundyserver.notification.controller;
 
 
+import io.fundy.fundyserver.notification.dto.NotificationResponseDTO;
 import io.fundy.fundyserver.notification.service.NotificationService;
+import io.fundy.fundyserver.register.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/notifications")
@@ -60,5 +63,32 @@ public class NotificationController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
+    }
+
+    // 알림 목록 조회
+//    @GetMapping
+//    public ResponseEntity<List<NotificationResponseDTO>> getNotifications(
+//            @AuthenticationPrincipal UserDetails userDetails, // 다운캐스팅해서 사용
+//            @RequestParam(defaultValue = "all") String type) {
+//
+//        // CustomUserDetails로 다운캐스팅
+//        if (!(userDetails instanceof CustomUserDetails customUser)) {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+//        }
+//
+//        Integer userNo = customUser.getUser().getUserNo();
+//        List<NotificationResponseDTO> notifications = notificationService.getNotificationsByUserAndType(userNo, type);
+//
+//        return ResponseEntity.ok(notifications);
+//    }
+
+    // 인증 없이 userNo 쿼리로 알림 조회
+    @GetMapping
+    public ResponseEntity<List<NotificationResponseDTO>> getNotifications(
+            @RequestParam Integer userNo,
+            @RequestParam(defaultValue = "all") String type) {
+
+        List<NotificationResponseDTO> notifications = notificationService.getNotificationsByUserAndType(userNo, type);
+        return ResponseEntity.ok(notifications);
     }
 }

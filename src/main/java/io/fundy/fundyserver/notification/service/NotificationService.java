@@ -4,15 +4,23 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fundy.fundyserver.notification.config.RabbitMQConfig;
 import io.fundy.fundyserver.notification.dto.NotificationMessageDTO;
+import io.fundy.fundyserver.notification.dto.NotificationResponseDTO;
+import io.fundy.fundyserver.notification.entity.Notification;
+import io.fundy.fundyserver.notification.repository.NotificationRepository;
 import io.fundy.fundyserver.project.entity.Project;
 import io.fundy.fundyserver.project.repository.ProjectRepository;
 import io.fundy.fundyserver.review.repository.ParticipationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
+@CrossOrigin(origins = "http://localhost:3000")
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
@@ -21,6 +29,7 @@ public class NotificationService {
     private final ObjectMapper objectMapper;
     private final ProjectRepository projectRepository;
     private final ParticipationRepository participationRepository;
+    private final NotificationRepository notificationRepository;
 
     // ① 후원 완료 알림
     public void sendSupportComplete(Integer userNo, Long projectNo, String projectTitle) {
@@ -88,6 +97,30 @@ public class NotificationService {
 
         String message = projectTitle + " 프로젝트가 목표 금액 미달로 종료되었습니다. 후원이 취소됩니다.";
         sendToQueue("프로젝트 마감 (실패)", message, userNo, projectNo);
+    }
+
+    // 알림 목록 조회
+    public List<NotificationResponseDTO> getNotificationsByUserAndType(Integer userNo, String type) {
+        List<Notification> notifications;
+
+        if ("all".equalsIgnoreCase(type)) {
+            notifications = notificationRepository.findByUser_UserNo(userNo);
+        } else {
+            notifications = notificationRepository.findByUser_UserNoAndType(userNo, type);
+        }
+
+        return notifications.stream()
+                .map(n -> new NotificationResponseDTO(
+                        n.getNotificationNo(),
+                        n.getProject().getProjectNo(),
+                        n.getProject().getTitle(),
+                        n.getType(),
+                        n.getMessage(),
+                        n.getIsRead(),
+                        n.getCreatedAt(),
+                        n.getUser().getNickname()
+                ))
+                .collect(Collectors.toList());
     }
 
     // 내부 공통 메서드
