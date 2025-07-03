@@ -1,10 +1,12 @@
 package io.fundy.fundyserver.notification.controller;
 
 
+import io.fundy.fundyserver.notification.dto.NotificationPageResponseDTO;
 import io.fundy.fundyserver.notification.dto.NotificationResponseDTO;
 import io.fundy.fundyserver.notification.service.NotificationService;
 import io.fundy.fundyserver.register.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -84,11 +86,13 @@ public class NotificationController {
 
     // 인증 없이 userNo 쿼리로 알림 조회
     @GetMapping
-    public ResponseEntity<List<NotificationResponseDTO>> getNotifications(
+    public ResponseEntity<Page<NotificationResponseDTO>> getNotifications(
             @RequestParam Integer userNo,
-            @RequestParam(defaultValue = "all") String type) {
+            @RequestParam(defaultValue = "all") String type,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
 
-        List<NotificationResponseDTO> notifications = notificationService.getNotificationsByUserAndType(userNo, type);
+        Page<NotificationResponseDTO> notifications = notificationService.getNotificationsByUserAndType(userNo, type, page, size);
         return ResponseEntity.ok(notifications);
     }
 }

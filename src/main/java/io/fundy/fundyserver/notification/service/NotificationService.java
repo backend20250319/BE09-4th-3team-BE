@@ -4,14 +4,20 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fundy.fundyserver.notification.config.RabbitMQConfig;
 import io.fundy.fundyserver.notification.dto.NotificationMessageDTO;
+import io.fundy.fundyserver.notification.dto.NotificationPageResponseDTO;
 import io.fundy.fundyserver.notification.dto.NotificationResponseDTO;
 import io.fundy.fundyserver.notification.entity.Notification;
 import io.fundy.fundyserver.notification.repository.NotificationRepository;
 import io.fundy.fundyserver.project.entity.Project;
 import io.fundy.fundyserver.project.repository.ProjectRepository;
 import io.fundy.fundyserver.review.repository.ParticipationRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
@@ -100,27 +106,34 @@ public class NotificationService {
     }
 
     // 알림 목록 조회
-    public List<NotificationResponseDTO> getNotificationsByUserAndType(Integer userNo, String type) {
-        List<Notification> notifications;
+    public Page<NotificationResponseDTO> getNotificationsByUserAndType(Integer userNo, String type, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Notification> notificationPage;
 
         if ("all".equalsIgnoreCase(type)) {
-            notifications = notificationRepository.findByUser_UserNo(userNo);
+            notificationPage = notificationRepository.findByUser_UserNo(userNo, pageable);
         } else {
-            notifications = notificationRepository.findByUser_UserNoAndType(userNo, type);
+            notificationPage = notificationRepository.findByUser_UserNoAndType(userNo, type, pageable);
         }
 
-        return notifications.stream()
-                .map(n -> new NotificationResponseDTO(
-                        n.getNotificationNo(),
-                        n.getProject().getProjectNo(),
-                        n.getProject().getTitle(),
-                        n.getType(),
-                        n.getMessage(),
-                        n.getIsRead(),
-                        n.getCreatedAt(),
-                        n.getUser().getNickname()
-                ))
-                .collect(Collectors.toList());
+        return notificationPage.map(n -> new NotificationResponseDTO(
+                n.getNotificationNo(),
+                n.getProject().getProjectNo(),
+                n.getProject().getTitle(),
+                n.getType(),
+                n.getMessage(),
+                n.getIsRead(),
+                n.getCreatedAt(),
+                n.getUser().getNickname()
+        ));
+    }
+
+    @Transactional
+    public void markAsRead(Long notificationNo) {
+        Notification notification = notificationRepository.findById(notificationNo)
+                .orElseThrow(() -> new RuntimeException("알림이 존재하지 않습니다."));
+
+        notification.markAsRead(); // setter 대신 의미 있는 메서드
     }
 
     // 내부 공통 메서드

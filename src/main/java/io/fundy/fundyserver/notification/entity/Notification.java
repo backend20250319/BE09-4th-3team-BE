@@ -50,4 +50,8 @@ public class Notification {
             createdAt = LocalDateTime.now();
         }
     }
+
+    public void markAsRead() {
+        this.isRead = true;
+    }
 }
