@@ -10,7 +10,6 @@ import io.fundy.fundyserver.notification.repository.NotificationRepository;
 import io.fundy.fundyserver.project.entity.Project;
 import io.fundy.fundyserver.project.repository.ProjectRepository;
 import io.fundy.fundyserver.review.repository.ParticipationRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.Page;
