@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fundy.fundyserver.notification.config.RabbitMQConfig;
 import io.fundy.fundyserver.notification.dto.NotificationMessageDTO;
-import io.fundy.fundyserver.notification.dto.NotificationPageResponseDTO;
 import io.fundy.fundyserver.notification.dto.NotificationResponseDTO;
 import io.fundy.fundyserver.notification.entity.Notification;
 import io.fundy.fundyserver.notification.repository.NotificationRepository;
@@ -20,11 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.CrossOrigin;
-
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "http://localhost:3000")
 @Service
@@ -110,10 +105,22 @@ public class NotificationService {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Notification> notificationPage;
 
-        if ("all".equalsIgnoreCase(type)) {
+        if (type == null || "all".equalsIgnoreCase(type)) {
             notificationPage = notificationRepository.findByUser_UserNo(userNo, pageable);
         } else {
-            notificationPage = notificationRepository.findByUser_UserNoAndType(userNo, type, pageable);
+            // 프론트에서 받은 영문 타입을 DB 저장된 한글 타입으로 매핑
+            String mappedType = switch (type) {
+                case "completed" -> "후원 완료";
+                case "success" -> "프로젝트 마감 (성공)";
+                case "fail" -> "프로젝트 마감 (실패)";
+                default -> null;
+            };
+
+            if (mappedType == null) {
+                throw new IllegalArgumentException("알 수 없는 알림 타입입니다: " + type);
+            }
+
+            notificationPage = notificationRepository.findByUser_UserNoAndType(userNo, mappedType, pageable);
         }
 
         return notificationPage.map(n -> new NotificationResponseDTO(

@@ -19,7 +19,7 @@ public class NotificationConsumer {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
     private final ProjectRepository projectRepository;
-    private final ObjectMapper objectMapper;  // JSON 파싱용
+    private final ObjectMapper objectMapper;
 
     @RabbitListener(queues = "notification.queue")
     public void receiveNotification(String messageJson) {
@@ -43,7 +43,6 @@ public class NotificationConsumer {
             notificationRepository.save(notification);
 
         } catch (Exception e) {
-            // 예외처리 (로그 남기기 추천)
             e.printStackTrace();
         }
     }

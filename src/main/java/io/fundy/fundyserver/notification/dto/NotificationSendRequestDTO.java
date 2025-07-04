@@ -9,9 +9,8 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class NotificationRequestDTO {
+public class NotificationSendRequestDTO {
     private Integer userNo;
-    private String type = "all";
-    private int page = 0;
-    private int size = 5;
+    private Long projectNo;
+    private String projectTitle;
 }
