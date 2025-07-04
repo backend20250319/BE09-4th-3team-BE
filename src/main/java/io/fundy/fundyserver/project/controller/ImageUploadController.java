@@ -3,61 +3,49 @@ package io.fundy.fundyserver.project.controller;
 import io.fundy.fundyserver.project.dto.image.ImageDTO;
 import io.fundy.fundyserver.project.dto.image.ImageUploadResponseDTO;
 import io.fundy.fundyserver.project.service.ImageService;
-import org.springframework.core.io.Resource;
+import io.fundy.fundyserver.register.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.UrlResource;
-import org.springframework.http.MediaType;
-import org.springframework.http.MediaTypeFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/projects")
+@Slf4j
+@RequestMapping("/api/project")
 public class ImageUploadController {
 
     private final ImageService imageService;
 
-    @PostMapping("/upload")
-    public ResponseEntity<ImageUploadResponseDTO> uploadImage(@RequestParam("file") MultipartFile file) throws IOException {
-        ImageDTO original = imageService.saveOriginalImage(file);
-        ImageDTO thumbnail = imageService.generateThumbnail(original);
+    // ✅ 썸네일 이미지만 저장 (원본 이미지는 저장하지 않음)
+    @PostMapping("/images/upload")
+    public ResponseEntity<ImageUploadResponseDTO> uploadImage(
+            @RequestParam("file") MultipartFile file
+    ) throws IOException {
+        // 원본 저장 없이 썸네일만 생성 및 저장
+        ImageDTO thumbnail = imageService.generateThumbnail(file);
 
         return ResponseEntity.ok(
                 ImageUploadResponseDTO.builder()
-                        .image(original)
-                        .thumbnail(thumbnail)
+                        .thumbnail(thumbnail)  // 썸네일 정보만 반환
                         .build()
         );
     }
 
-    @GetMapping("/images/{filename:.+}")
-    public ResponseEntity<Resource> serveImage(@PathVariable String filename) throws IOException {
-        Path imagePath = Paths.get("C:/dev/BE09-4th-3team-Image", filename);
-        Resource resource = new UrlResource(imagePath.toUri());
 
-        if (!resource.exists()) return ResponseEntity.notFound().build();
+    // ✅ CKEditor 전용 이미지 업로드 (썸네일 X)
+    @PostMapping("/images/ckeditor-upload")
+    public ResponseEntity<?> uploadEditorImage(@RequestParam("upload") MultipartFile file) throws IOException {
+        ImageDTO image = imageService.saveEditorImage(file);
 
-        return ResponseEntity.ok()
-                .contentType(MediaTypeFactory.getMediaType(resource).orElse(MediaType.APPLICATION_OCTET_STREAM))
-                .body(resource);
-    }
-
-    @GetMapping("/images/thumb/{filename:.+}")
-    public ResponseEntity<Resource> serveThumbnail(@PathVariable String filename) throws IOException {
-        Path thumbPath = Paths.get("C:/dev/BE09-4th-3team-Image/thumb", filename);
-        Resource resource = new UrlResource(thumbPath.toUri());
-
-        if (!resource.exists()) return ResponseEntity.notFound().build();
-
-        return ResponseEntity.ok()
-                .contentType(MediaTypeFactory.getMediaType(resource).orElse(MediaType.APPLICATION_OCTET_STREAM))
-                .body(resource);
+        return ResponseEntity.ok(Map.of(
+                "uploaded", true,
+                "url", image.getImagePath()
+        ));
     }
 }
-

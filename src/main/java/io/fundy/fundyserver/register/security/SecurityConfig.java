@@ -78,10 +78,6 @@ public class SecurityConfig {
                 "/login/oauth2/code/**",
                 "/api/project/list",
                 "/api/project/{projectNo:\\d+}",
-                // 현재 로그인 없이 테스트를 위한 프로젝트 등록 / 이미지 썸네일 업로드 / 에디터 이미지 업로드
-                "/api/project/upload",
-                "/api/project/images/upload",
-                "/api/project/images/ckeditor-upload",
                 "/swagger-ui/**", "/v3/api-docs/**", "/h2-console/**",
                 "/css/**", "/js/**", "/images/**", "/uploads/**"
         );
