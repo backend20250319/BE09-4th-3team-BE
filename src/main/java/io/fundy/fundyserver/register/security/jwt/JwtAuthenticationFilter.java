@@ -25,7 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-@Slf4j  // ← 1. 로거 추가 (기존 @Slf4j 유지)
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
@@ -46,12 +46,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.skipPaths = skipPaths;
     }
 
-    /** skipPaths 에 매칭되는 요청은 이 필터를 적용하지 않음 */
+    /** skipPaths에 매칭되는 요청은 필터 적용 안 함 */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
         boolean skip = skipPaths.stream().anyMatch(pattern -> pathMatcher.match(pattern, path));
-        log.debug("shouldNotFilter? [{}] -> {}", path, skip);  // ← 2. 디버깅용 로그 추가
+        log.debug("shouldNotFilter? [{}] -> {}", path, skip);
         return skip;
     }
 
@@ -64,19 +64,32 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 1) 토큰 추출
         String token = resolveToken(request);
-        log.debug("Resolved token: {}", token);  // ← 3. 추출된 토큰 로그
+        log.debug("Resolved token: {}", token);
 
-        // 2) 보호된 경로면 토큰 없거나 유효하지 않을 때 바로 401 응답
+        // 2) 보호된 경로면 토큰 없거나 유효하지 않을 때 401 반환
         if (!shouldNotFilter(request)) {
             if (token == null) {
                 log.warn("[JWT 인증 실패] 토큰 누락: {}", request.getServletPath());
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authorization 토큰이 필요합니다.");
-                return;  // 체인 종료
+                sendUnauthorized(response, "Authorization 토큰이 필요합니다.");
+                return;
             }
-            if (!tokenProvider.validateToken(token)) {
-                log.warn("[JWT 인증 실패] 토큰 유효성 검증 실패: {}", token);
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "유효하지 않은 토큰입니다.");
-                return;  // 체인 종료
+            // 만료 or 기타 JWT 예외를 명확하게 구분해서 401 메시지 다르게 처리
+            try {
+                if (!tokenProvider.validateToken(token)) {
+                    log.warn("[JWT 인증 실패] 토큰 유효성 검증 실패: {}", token);
+                    sendUnauthorized(response, "유효하지 않은 토큰입니다.");
+                    return;
+                }
+            } catch (ApiException ex) {
+                if (ex.getErrorCode() == ErrorCode.TOKEN_EXPIRED) {
+                    log.warn("[JWT 인증 실패] 토큰 만료: {}", token);
+                    sendUnauthorized(response, "만료된 토큰입니다.");
+                    return;
+                } else {
+                    log.warn("[JWT 인증 실패] 기타 JWT 에러: {}", ex.getMessage());
+                    sendUnauthorized(response, "유효하지 않은 토큰입니다.");
+                    return;
+                }
             }
 
             // 3) 토큰이 유효하면 userId 추출 → 인증 컨텍스트 설정
@@ -86,7 +99,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 log.info("[JWT 인증 성공] userId: {}", userId);
             } else {
                 log.warn("[JWT 인증 실패] 유효한 토큰이나 사용자 없음: {}", userId);
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "사용자를 찾을 수 없습니다.");
+                sendUnauthorized(response, "사용자를 찾을 수 없습니다.");
                 return;
             }
         }
@@ -144,5 +157,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         ((org.springframework.security.core.userdetails.UserDetails) principal).getAuthorities()
                 );
         SecurityContextHolder.getContext().setAuthentication(auth);
+    }
+
+    /** 401 에러 응답 유틸리티 (에러 메시지 반환) */
+    private void sendUnauthorized(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write("{\"error\": \"" + message + "\"}");
     }
 }
