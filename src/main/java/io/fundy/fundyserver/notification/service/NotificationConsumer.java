@@ -9,11 +9,13 @@ import io.fundy.fundyserver.project.repository.ProjectRepository;
 import io.fundy.fundyserver.register.entity.User;
 import io.fundy.fundyserver.register.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class NotificationConsumer {
 
     private final NotificationRepository notificationRepository;
@@ -43,7 +45,7 @@ public class NotificationConsumer {
             notificationRepository.save(notification);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("알림 수신 처리 중 오류 발생", e);
         }
     }
 }
