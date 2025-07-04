@@ -135,13 +135,13 @@ public class NotificationService {
         ));
     }
 
-    @Transactional
-    public void markAsRead(Long notificationNo) {
-        Notification notification = notificationRepository.findById(notificationNo)
-                .orElseThrow(() -> new RuntimeException("알림이 존재하지 않습니다."));
-
-        notification.markAsRead(); // setter 대신 의미 있는 메서드
-    }
+//    @Transactional
+//    public void markAsRead(Long notificationNo) {
+//        Notification notification = notificationRepository.findById(notificationNo)
+//                .orElseThrow(() -> new RuntimeException("알림이 존재하지 않습니다."));
+//
+//        notification.markAsRead();
+//    }
 
     // 내부 공통 메서드
     private void sendToQueue(String type, String content, Integer userNo, Long projectNo) {
