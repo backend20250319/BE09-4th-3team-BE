@@ -76,6 +76,8 @@ public class SecurityConfig {
                 "/api/register/password_update",
                 "/oauth2/authorization/**",
                 "/login/oauth2/code/**",
+                "/api/project/list",
+                "/api/project/{projectNo:\\d+}",
                 "/swagger-ui/**", "/v3/api-docs/**", "/h2-console/**",
                 "/css/**", "/js/**", "/images/**", "/uploads/**"
         );
@@ -91,23 +93,6 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        // 정적 리소스
-                        .requestMatchers("/", "/favicon.ico", "/css/**", "/js/**", "/images/**", "/uploads/**")
-                        .permitAll()
-                        // 공개 API
-                        .requestMatchers(
-                                "/api/register/signup",
-                                "/api/register/login",
-                                "/api/register/refresh",
-                                "/api/register/check-user-id",
-                                "/api/register/check-email",
-                                "/api/register/check-nickname",
-                                "/api/register/check-phone"
-                        ).permitAll()  // ← 수정
-                        // 그 외 모든 요청은 인증 필요
-                        .anyRequest().authenticated()
-                )
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
                         .accessDeniedHandler(new AccessDeniedHandlerImpl())

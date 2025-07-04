@@ -71,6 +71,12 @@ public class Project {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt = LocalDateTime.now(); // 수정일
 
+    @Column(name = "creator_name", nullable = false)
+    private String creatorName;
+
+    @Column(name = "creator_info", nullable = false)
+    private String creatorInfo;
+
     @PrePersist
     protected void onCreate() {
         createdAt = updatedAt = LocalDateTime.now();
@@ -89,10 +95,7 @@ public class Project {
         reward.setProject(this);
     }
 
-    public static Project create(
-            User user, Category category, ProjectRequestDTO dto
-    ) {
-
+    public static Project create(User user, Category category, ProjectRequestDTO dto) {
         Project project = new Project();
         project.user = user;
         project.category = category;
@@ -108,8 +111,14 @@ public class Project {
         project.createdAt = LocalDateTime.now();
         project.updatedAt = LocalDateTime.now();
 
+        // ✅ 누락된 필드 추가
+        project.creatorName = dto.getCreatorName();
+        project.creatorInfo = dto.getCreatorInfo();
+        project.thumbnailUrl = dto.getThumbnailUrl();
+
         return project;
     }
+
 
 
 }
