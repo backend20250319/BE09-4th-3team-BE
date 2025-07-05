@@ -16,5 +16,4 @@ public class ReviewRequestDTO {
     private Satisfaction planStatus;
     private Satisfaction commStatus;
     private String content;
-    private MultipartFile image;
 }

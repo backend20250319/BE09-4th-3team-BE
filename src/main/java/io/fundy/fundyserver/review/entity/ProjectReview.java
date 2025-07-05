@@ -73,4 +73,12 @@ public class ProjectReview {
         review.imageUrl = imageUrl;
         return review;
     }
+
+    public void updateReview(int rewardStatus, int planStatus, int commStatus, String content, String imageUrl) {
+        this.rewardStatus = rewardStatus;
+        this.planStatus = planStatus;
+        this.commStatus = commStatus;
+        this.content = content;
+        this.imageUrl = imageUrl;
+    }
 }

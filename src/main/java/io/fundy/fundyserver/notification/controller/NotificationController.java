@@ -1,0 +1,64 @@
+package io.fundy.fundyserver.notification.controller;
+
+
+import io.fundy.fundyserver.notification.service.NotificationService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/notifications")
+@RequiredArgsConstructor
+public class NotificationController {
+
+    private final NotificationService notificationService;
+
+    @PostMapping("/support")
+    public ResponseEntity<String> sendSupport(
+            @RequestParam Integer userNo,
+            @RequestParam Long projectNo,
+            @RequestParam String projectTitle) {
+        notificationService.sendSupportComplete(userNo, projectNo, projectTitle);
+        return ResponseEntity.ok("후원 완료 알림이 성공적으로 전송되었습니다.");
+    }
+
+    @PostMapping("/success")
+    public ResponseEntity<String> sendSuccess(
+            @RequestParam Integer userNo,
+            @RequestParam Long projectNo,
+            @RequestParam String projectTitle) {
+        try {
+            notificationService.sendProjectSuccess(userNo, projectNo, projectTitle);
+            return ResponseEntity.ok("프로젝트 성공 알림이 성공적으로 전송되었습니다.");
+        } catch (IllegalArgumentException e) {
+            // 참여 권한 없는 경우
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/fail")
+    public ResponseEntity<String> sendFail(
+            @RequestParam Integer userNo,
+            @RequestParam Long projectNo,
+            @RequestParam String projectTitle) {
+        try {
+            notificationService.sendProjectFail(userNo, projectNo, projectTitle);
+            return ResponseEntity.ok("프로젝트 실패 알림이 성공적으로 전송되었습니다.");
+        } catch (IllegalArgumentException e) {
+            // 참여 권한 없는 경우
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+}

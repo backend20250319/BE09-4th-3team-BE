@@ -97,4 +97,20 @@ public class JwtTokenProvider {
     public JwtProperties getProps() {
         return props;
     }
+
+    /** (신규) 토큰 만료시간(exp) 반환 - 만료시각(밀리초) */
+    public Date getTokenExpiry(String token) {
+        return parseClaims(token).getPayload().getExpiration();
+    }
+
+    /** (신규) 토큰이 만료됐는지 즉시 체크 (true = 만료) */
+    public boolean isTokenExpired(String token) {
+        try {
+            Date exp = getTokenExpiry(token);
+            return exp.before(new Date());
+        } catch (ApiException e) {
+            // 이미 만료된 경우
+            return true;
+        }
+    }
 }
