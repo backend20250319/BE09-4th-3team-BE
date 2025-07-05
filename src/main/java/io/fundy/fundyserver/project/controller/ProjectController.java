@@ -8,6 +8,7 @@ import io.fundy.fundyserver.project.service.ProjectService;
 import io.fundy.fundyserver.register.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.aspectj.weaver.ast.HasAnnotation;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,6 +29,7 @@ public class ProjectController {
      * @param user
      * @return
      */
+    @PreAuthorize("hasAuthority(\"USER\")")
     @PostMapping("/project")
     public ResponseEntity<ProjectResponseDTO> createProject(
             @Valid @RequestBody ProjectRequestDTO requestDTO,
