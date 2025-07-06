@@ -69,9 +69,12 @@ public class NotificationController {
     }
 
     @DeleteMapping("/{notificationNo}")
-    public ResponseEntity<Void> deleteNotification(@PathVariable Long notificationNo) {
-        notificationService.deleteNotification(notificationNo);
-        return ResponseEntity.noContent().build();  // 204 No Content
+    public ResponseEntity<Void> deleteNotification(
+            @PathVariable Long notificationNo,
+            @RequestParam Integer userNo  // 프론트에서 userNo 보내기
+    ) {
+        notificationService.deleteNotification(notificationNo, userNo);
+        return ResponseEntity.noContent().build();
     }
 
     /**

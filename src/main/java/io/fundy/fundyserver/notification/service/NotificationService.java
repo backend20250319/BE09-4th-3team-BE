@@ -17,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import java.time.LocalDate;
@@ -101,11 +102,16 @@ public class NotificationService {
     }
 
     @Transactional
-    public void deleteNotification(Long notificationNo) {
-        if (!notificationRepository.existsById(notificationNo)) {
-            throw new RuntimeException("해당 알림이 존재하지 않습니다.");
+    public void deleteNotification(Long notificationNo, Integer userNo) {
+        Notification notification = notificationRepository.findById(notificationNo)
+                .orElseThrow(() -> new RuntimeException("해당 알림이 존재하지 않습니다."));
+
+        // 보안 체크: 자기 알림만 삭제 가능
+        if (!notification.getUser().getUserNo().equals(userNo)) {
+            throw new AccessDeniedException("알림 삭제 권한이 없습니다.");
         }
-        notificationRepository.deleteById(notificationNo);
+
+        notificationRepository.delete(notification);
     }
 
     // 알림 목록 조회
