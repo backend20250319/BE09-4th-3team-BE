@@ -77,6 +77,23 @@ public class NotificationController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/unread-count")
+    public ResponseEntity<Long> getUnreadCount(@RequestParam Integer userNo) {
+        long count = notificationService.countUnreadNotifications(userNo);
+        return ResponseEntity.ok(count);
+    }
+
+    /**
+     * 특정 사용자의 모든 알림을 읽음 처리
+     * @param userNo 사용자 번호
+     * @return 성공 메시지
+     */
+    @PatchMapping("/mark-all-read")
+    public ResponseEntity<String> markAllAsRead(@RequestParam Integer userNo) {
+        notificationService.markAllNotificationsAsRead(userNo);
+        return ResponseEntity.ok("모든 알림이 읽음 처리되었습니다.");
+    }
+
     /**
      * 알림 목록 조회 (페이징, 필터링 가능)
      * @param dto - userNo, type(알림 유형), page, size 포함한 조회용 DTO

@@ -21,6 +21,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import java.time.LocalDate;
+import java.util.List;
+
 
 @CrossOrigin(origins = "http://localhost:3000")
 @Service
@@ -114,6 +116,25 @@ public class NotificationService {
         notificationRepository.delete(notification);
     }
 
+    public long countUnreadNotifications(Integer userNo) {
+        return notificationRepository.countByUser_UserNoAndIsReadFalse(userNo);
+    }
+
+    /**
+     * 특정 사용자의 모든 읽지 않은 알림을 읽음 처리
+     * @param userNo 사용자 번호
+     */
+    @Transactional
+    public void markAllNotificationsAsRead(Integer userNo) {
+        List<Notification> unreadNotifications = notificationRepository.findByUser_UserNoAndIsReadFalse(userNo);
+
+        for (Notification notification : unreadNotifications) {
+            notification.markAsRead();
+        }
+
+        notificationRepository.saveAll(unreadNotifications);
+    }
+
     // 알림 목록 조회
     public Page<NotificationResponseDTO> getNotificationsByUserAndType(Integer userNo, String type, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
@@ -148,14 +169,6 @@ public class NotificationService {
                 n.getUser().getNickname()
         ));
     }
-
-//    @Transactional
-//    public void markAsRead(Long notificationNo) {
-//        Notification notification = notificationRepository.findById(notificationNo)
-//                .orElseThrow(() -> new RuntimeException("알림이 존재하지 않습니다."));
-//
-//        notification.markAsRead();
-//    }
 
     // 내부 공통 메서드
     private void sendToQueue(String type, String content, Integer userNo, Long projectNo) {
