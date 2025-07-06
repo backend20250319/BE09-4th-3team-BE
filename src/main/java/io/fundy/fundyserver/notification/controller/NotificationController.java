@@ -68,6 +68,12 @@ public class NotificationController {
         }
     }
 
+    @DeleteMapping("/{notificationNo}")
+    public ResponseEntity<Void> deleteNotification(@PathVariable Long notificationNo) {
+        notificationService.deleteNotification(notificationNo);
+        return ResponseEntity.noContent().build();  // 204 No Content
+    }
+
     /**
      * 알림 목록 조회 (페이징, 필터링 가능)
      * @param dto - userNo, type(알림 유형), page, size 포함한 조회용 DTO
@@ -79,4 +85,6 @@ public class NotificationController {
                 dto.getUserNo(), dto.getType(), dto.getPage(), dto.getSize());
         return ResponseEntity.ok(notifications);
     }
+
+
 }

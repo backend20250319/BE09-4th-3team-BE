@@ -10,6 +10,7 @@ import io.fundy.fundyserver.notification.repository.NotificationRepository;
 import io.fundy.fundyserver.project.entity.Project;
 import io.fundy.fundyserver.project.repository.ProjectRepository;
 import io.fundy.fundyserver.review.repository.ParticipationRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.Page;
@@ -97,6 +98,14 @@ public class NotificationService {
 
         String message = projectTitle + " 프로젝트가 목표 금액 미달로 종료되었습니다. 후원이 취소됩니다.";
         sendToQueue("프로젝트 마감 (실패)", message, userNo, projectNo);
+    }
+
+    @Transactional
+    public void deleteNotification(Long notificationNo) {
+        if (!notificationRepository.existsById(notificationNo)) {
+            throw new RuntimeException("해당 알림이 존재하지 않습니다.");
+        }
+        notificationRepository.deleteById(notificationNo);
     }
 
     // 알림 목록 조회
