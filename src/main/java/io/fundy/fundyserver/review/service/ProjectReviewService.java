@@ -9,6 +9,7 @@ import io.fundy.fundyserver.review.dto.ReviewRequestDTO;
 import io.fundy.fundyserver.review.dto.ReviewResponseDTO;
 import io.fundy.fundyserver.review.dto.ReviewUpdateResultDTO;
 import io.fundy.fundyserver.review.dto.ReviewWritableProjectDTO;
+import io.fundy.fundyserver.review.entity.Participation;
 import io.fundy.fundyserver.review.entity.ProjectReview;
 import io.fundy.fundyserver.review.exception.ReviewErrorCode;
 import io.fundy.fundyserver.review.exception.ReviewException;
@@ -94,12 +95,10 @@ public class ProjectReviewService {
     // 전체 후기 - 페이징 조회
     public Page<ReviewResponseDTO> getReviewsByProjectNo(Long projectNo, int page, int size, String sortBy) {
         Sort sort;
-        switch (sortBy) {
-            case "satisfaction":
-                sort = Sort.by(Sort.Direction.DESC, "planStatus"); // 만족도순 정렬 처리
-                break;
-            default:
-                sort = Sort.by(Sort.Direction.DESC, "createdAt"); // 최신순 정렬 처리
+        if ("satisfaction".equals(sortBy)) {
+            sort = Sort.by(Sort.Direction.DESC, "planStatus"); // 만족도순 정렬 처리
+        } else {
+            sort = Sort.by(Sort.Direction.DESC, "createdAt"); // 최신순 정렬 처리
         }
 
         Pageable pageable = PageRequest.of(page, size, sort);
@@ -124,7 +123,7 @@ public class ProjectReviewService {
     // 리뷰 수정
     @Transactional
     public ReviewUpdateResultDTO updateReview(Long reviewNo, ReviewRequestDTO dto, Integer userNo) {
-        User user = findUserOrThrow(userNo);
+        findUserOrThrow(userNo);
 
         ProjectReview review = projectReviewRepository.findById(reviewNo)
                 .orElseThrow(() -> new ReviewException(ReviewErrorCode.REVIEW_NOT_FOUND));
@@ -150,7 +149,7 @@ public class ProjectReviewService {
     // 리뷰 삭제
     @Transactional
     public void deleteReview(Long reviewNo, Integer userNo) {
-        User user = findUserOrThrow(userNo);
+        findUserOrThrow(userNo);
 
         ProjectReview review = projectReviewRepository.findById(reviewNo)
                 .orElseThrow(() -> new ReviewException(ReviewErrorCode.REVIEW_NOT_FOUND));
@@ -166,7 +165,7 @@ public class ProjectReviewService {
         // 1. 유저가 참여한 프로젝트들 가져오기
         List<Project> participatedProjects = participationRepository.findByUser_UserNo(userNo)
                 .stream()
-                .map(p -> p.getProject())
+                .map(Participation::getProject) // 메서드 참조로 변경
                 .toList();
 
         // 2. 유저가 이미 작성한 리뷰들 가져오기
