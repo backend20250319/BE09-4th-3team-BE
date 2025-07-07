@@ -8,6 +8,7 @@ import io.fundy.fundyserver.register.exception.ApiException;
 import io.fundy.fundyserver.register.exception.ErrorCode;
 import io.fundy.fundyserver.register.repository.RefreshTokenRepository;
 import io.fundy.fundyserver.register.security.jwt.JwtTokenProvider;
+import io.fundy.fundyserver.register.service.AddressService;
 import io.fundy.fundyserver.register.service.UserService;
 import io.fundy.fundyserver.register.dto.UserUpdateRequestDTO;
 import jakarta.validation.Valid;
@@ -18,6 +19,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -28,6 +30,7 @@ public class RegisterController {
     private final UserService userService;
     private final JwtTokenProvider jwtProvider;
     private final RefreshTokenRepository refreshRepo;
+    private final AddressService addressService;
 
     // ✅ 회원가입
     @PostMapping("/signup")
@@ -49,7 +52,7 @@ public class RegisterController {
         log.info("✅ JWT 생성 완료");
 
         RefreshToken tokenEntity = refreshRepo.findById(user.getUserId())
-                                .orElse(RefreshToken.builder()
+                .orElse(RefreshToken.builder()
                         .userId(user.getUserId())
                         .token(refreshToken)
                         .expiryDate(Instant.now().plusMillis(jwtProvider.getRefreshTokenExpiryMs()))
@@ -73,7 +76,7 @@ public class RegisterController {
     @GetMapping("/user/me")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<UserResponseDTO> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
-        String token  = authHeader.replace("Bearer ", "");
+        String token = authHeader.replace("Bearer ", "");
         String userId = jwtProvider.getUserId(token);
         UserResponseDTO user = userService.getUserByUserId(userId);
         return ResponseEntity.ok(user);
@@ -86,9 +89,9 @@ public class RegisterController {
             @RequestHeader("Authorization") String authHeader,
             @Valid @RequestBody UserRequestDTO req
     ) {
-        String token  = authHeader.replace("Bearer ", "");
+        String token = authHeader.replace("Bearer ", "");
         String userId = jwtProvider.getUserId(token);
-        Integer id    = userService.getUserByUserId(userId).getUserNo();
+        Integer id = userService.getUserByUserId(userId).getUserNo();
 
         UserResponseDTO updated = userService.updateUser(id, req);
         return ResponseEntity.ok(updated);
@@ -99,7 +102,7 @@ public class RegisterController {
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<String> logout(@RequestHeader("Authorization") String authHeader) {
         try {
-            String token  = authHeader.replace("Bearer ", "");
+            String token = authHeader.replace("Bearer ", "");
             String userId = jwtProvider.getUserId(token);
             log.info("로그아웃 요청 userId: {}", userId);
             userService.logout(userId);
@@ -118,9 +121,9 @@ public class RegisterController {
             @RequestHeader("Authorization") String authHeader,
             @Valid @RequestBody PasswordChangeRequestDTO req
     ) {
-        String token  = authHeader.replace("Bearer ", "");
+        String token = authHeader.replace("Bearer ", "");
         String userId = jwtProvider.getUserId(token);
-        Integer id    = userService.getUserByUserId(userId).getUserNo();
+        Integer id = userService.getUserByUserId(userId).getUserNo();
 
         userService.changePassword(id, req);
         return ResponseEntity.ok("비밀번호 변경 하였습니다.");
@@ -130,9 +133,9 @@ public class RegisterController {
     @DeleteMapping("/user/me_quit")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<String> deleteAccount(@RequestHeader("Authorization") String authHeader) {
-        String token  = authHeader.replace("Bearer ", "");
+        String token = authHeader.replace("Bearer ", "");
         String userId = jwtProvider.getUserId(token);
-        Integer id    = userService.getUserByUserId(userId).getUserNo();
+        Integer id = userService.getUserByUserId(userId).getUserNo();
 
         userService.updateUserStatus(id, UserStatus.QUIT);
         return ResponseEntity.ok("회원 탈퇴 처리 되었습니다.");
@@ -148,8 +151,8 @@ public class RegisterController {
             throw new ApiException(ErrorCode.TOKEN_EXPIRED);
         }
 
-        String userId     = jwtProvider.getUserId(stored.getToken());
-        String newAccess  = jwtProvider.createAccessToken(userId, jwtProvider.getRole(stored.getToken()));
+        String userId = jwtProvider.getUserId(stored.getToken());
+        String newAccess = jwtProvider.createAccessToken(userId, jwtProvider.getRole(stored.getToken()));
         String newRefresh = jwtProvider.createRefreshToken(userId);
 
         stored.setToken(newRefresh);
@@ -187,6 +190,7 @@ public class RegisterController {
         return ResponseEntity.ok(userService.isPhoneDuplicate(phone));
     }
 
+    // ✅ 프로필 정보 수정
     @PatchMapping("/user/me/profile")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<UserResponseDTO> updateUserProfile(
@@ -198,6 +202,103 @@ public class RegisterController {
         Integer id = userService.getUserByUserId(userId).getUserNo();
 
         UserResponseDTO updated = userService.updateUserProfile(id, req);
+        return ResponseEntity.ok(updated);
+    }
+
+    // ========== 배송지 관련 API ==========
+
+    // ✅ 배송지 등록
+    @PostMapping("/user/me/addresses")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<AddressResponseDTO> addAddress(
+            @RequestHeader("Authorization") String authHeader,
+            @Valid @RequestBody AddressRequestDTO req
+    ) {
+        log.info("✅ 배송지 등록 요청 수신: name={}, phone={}", req.getName(), req.getPhone());
+
+        String token = authHeader.replace("Bearer ", "");
+        String userId = jwtProvider.getUserId(token);
+        Integer userNo = userService.getUserByUserId(userId).getUserNo();
+
+        AddressResponseDTO address = addressService.addAddress(userNo, req);
+        log.info("✅ 배송지 등록 완료: addressId={}", address.getId());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(address);
+    }
+
+    // ✅ 배송지 목록 조회
+    @GetMapping("/user/me/addresses")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<List<AddressResponseDTO>> getAddresses(
+            @RequestHeader("Authorization") String authHeader
+    ) {
+        log.info("✅ 배송지 목록 조회 요청 수신");
+
+        String token = authHeader.replace("Bearer ", "");
+        String userId = jwtProvider.getUserId(token);
+        Integer userNo = userService.getUserByUserId(userId).getUserNo();
+
+        List<AddressResponseDTO> addresses = addressService.getAddressesByUserNo(userNo);
+        log.info("✅ 배송지 목록 조회 완료: count={}", addresses.size());
+
+        return ResponseEntity.ok(addresses);
+    }
+
+    // ✅ 배송지 삭제
+    @DeleteMapping("/user/me/addresses/{addressId}")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<String> deleteAddress(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable Long addressId
+    ) {
+        log.info("✅ 배송지 삭제 요청 수신: addressId={}", addressId);
+
+        String token = authHeader.replace("Bearer ", "");
+        String userId = jwtProvider.getUserId(token);
+        Integer userNo = userService.getUserByUserId(userId).getUserNo();
+
+        addressService.deleteAddress(userNo, addressId);
+        log.info("✅ 배송지 삭제 완료: addressId={}", addressId);
+
+        return ResponseEntity.ok("배송지가 삭제되었습니다.");
+    }
+
+    // ✅ 기본 배송지 설정
+    @PatchMapping("/user/me/addresses/{addressId}/default")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<String> setDefaultAddress(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable Long addressId
+    ) {
+        log.info("✅ 기본 배송지 설정 요청 수신: addressId={}", addressId);
+
+        String token = authHeader.replace("Bearer ", "");
+        String userId = jwtProvider.getUserId(token);
+        Integer userNo = userService.getUserByUserId(userId).getUserNo();
+
+        addressService.setDefaultAddress(userNo, addressId);
+        log.info("✅ 기본 배송지 설정 완료: addressId={}", addressId);
+
+        return ResponseEntity.ok("기본 배송지로 설정되었습니다.");
+    }
+
+    // ✅ 배송지 수정
+    @PutMapping("/user/me/addresses/{addressId}")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<AddressResponseDTO> updateAddress(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable Long addressId,
+            @Valid @RequestBody AddressRequestDTO req
+    ) {
+        log.info("✅ 배송지 수정 요청 수신: addressId={}", addressId);
+
+        String token = authHeader.replace("Bearer ", "");
+        String userId = jwtProvider.getUserId(token);
+        Integer userNo = userService.getUserByUserId(userId).getUserNo();
+
+        AddressResponseDTO updated = addressService.updateAddress(userNo, addressId, req);
+        log.info("✅ 배송지 수정 완료: addressId={}", addressId);
+
         return ResponseEntity.ok(updated);
     }
 }
