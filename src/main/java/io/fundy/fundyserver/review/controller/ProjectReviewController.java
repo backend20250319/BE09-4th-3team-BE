@@ -33,11 +33,13 @@ public class ProjectReviewController {
 
     // 전체 후기 조회
     @GetMapping("/project/{projectNo}")
-    public ResponseEntity<Page<ReviewResponseDTO>> getReviews(
+    public ResponseEntity<?> getReviews(
             @PathVariable Long projectNo,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size) {
-        Page<ReviewResponseDTO> reviews = reviewService.getReviewsByProjectNo(projectNo, page, size);
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "latest") String sort) {
+
+        Page<?> reviews = reviewService.getReviewsByProjectNo(projectNo, page, size, sort);
         return ResponseEntity.ok(reviews);
     }
 
@@ -73,7 +75,7 @@ public class ProjectReviewController {
 
     @GetMapping("/writable")
     public ResponseEntity<List<ReviewWritableProjectDTO>> getWritableProjects(
-            @RequestParam Integer userNo) {
+            @RequestParam Integer userNo) { // 쿼리 파라미터로 userNo 받기
 
         List<ReviewWritableProjectDTO> result = reviewService.getWritableProjects(userNo);
         return ResponseEntity.ok(result);

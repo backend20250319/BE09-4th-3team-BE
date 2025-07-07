@@ -35,27 +35,43 @@ public class ProjectReviewService {
     private final ProjectRepository projectRepository;
     private final ParticipationRepository participationRepository;
 
-    // 후기 등록
-    @Transactional
-    public ReviewResponseDTO createReview(ReviewRequestDTO dto, Integer userNo) {
+    // 사용자 조회 + 관리자 권한 체크 + 존재 여부 확인
+    private User findUserOrThrow(Integer userNo) {
         User user = userRepository.findById(userNo)
                 .orElseThrow(() -> new ReviewException(ReviewErrorCode.USER_NOT_FOUND));
 
-        Project project = projectRepository.findById(dto.getProjectNo())
-                .orElseThrow(() -> new ReviewException(ReviewErrorCode.PROJECT_NOT_FOUND));
-
-        // 관리자 차단
         if (user.getRoleType() == RoleType.ADMIN) {
             throw new ReviewException(ReviewErrorCode.NOT_ALLOWED_FOR_ADMIN);
         }
 
-        // 참여자만 작성 가능
-        boolean isParticipant = participationRepository.existsByUser_UserNoAndProject_ProjectNo(userNo, dto.getProjectNo());
+        return user;
+    }
+
+    // 프로젝트 참여 여부 확인
+    private void checkParticipation(Integer userNo, Long projectNo) {
+        boolean isParticipant = participationRepository.existsByUser_UserNoAndProject_ProjectNo(userNo, projectNo);
         if (!isParticipant) {
             throw new ReviewException(ReviewErrorCode.USER_NOT_PARTICIPATED);
         }
+    }
 
-        // 중복 작성 방지
+    // 리뷰 작성자 권한 확인
+    private void checkReviewOwnership(ProjectReview review, Integer userNo) {
+        if (!review.getUser().getUserNo().equals(userNo)) {
+            throw new ReviewException(ReviewErrorCode.UNAUTHORIZED_REVIEW_ACCESS);
+        }
+    }
+
+    // 후기 등록
+    @Transactional
+    public ReviewResponseDTO createReview(ReviewRequestDTO dto, Integer userNo) {
+        User user = findUserOrThrow(userNo);
+
+        Project project = projectRepository.findById(dto.getProjectNo())
+                .orElseThrow(() -> new ReviewException(ReviewErrorCode.PROJECT_NOT_FOUND));
+
+        checkParticipation(userNo, dto.getProjectNo());
+
         boolean exists = projectReviewRepository.existsByUserAndProject(user, project);
         if (exists) {
             throw new ReviewException(ReviewErrorCode.REVIEW_ALREADY_EXISTS);
@@ -76,12 +92,18 @@ public class ProjectReviewService {
     }
 
     // 전체 후기 - 페이징 조회
-    public Page<ReviewResponseDTO> getReviewsByProjectNo(Long projectNo, int page, int size) {
-        Project project = projectRepository.findById(projectNo)
-                .orElseThrow(() -> new ReviewException(ReviewErrorCode.PROJECT_NOT_FOUND));
+    public Page<ReviewResponseDTO> getReviewsByProjectNo(Long projectNo, int page, int size, String sortBy) {
+        Sort sort;
+        switch (sortBy) {
+            case "satisfaction":
+                sort = Sort.by(Sort.Direction.DESC, "planStatus"); // 만족도순 정렬 처리
+                break;
+            default:
+                sort = Sort.by(Sort.Direction.DESC, "createdAt"); // 최신순 정렬 처리
+        }
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<ProjectReview> reviewPage = projectReviewRepository.findByProject(project, pageable);
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<ProjectReview> reviewPage = projectReviewRepository.findByProject_ProjectNo(projectNo, pageable);
 
         return reviewPage.map(this::toDTO);
     }
@@ -102,17 +124,13 @@ public class ProjectReviewService {
     // 리뷰 수정
     @Transactional
     public ReviewUpdateResultDTO updateReview(Long reviewNo, ReviewRequestDTO dto, Integer userNo) {
+        User user = findUserOrThrow(userNo);
+
         ProjectReview review = projectReviewRepository.findById(reviewNo)
                 .orElseThrow(() -> new ReviewException(ReviewErrorCode.REVIEW_NOT_FOUND));
 
-        if (!review.getUser().getUserNo().equals(userNo)) {
-            throw new ReviewException(ReviewErrorCode.UNAUTHORIZED_REVIEW_ACCESS);
-        }
-
-        boolean isParticipant = participationRepository.existsByUser_UserNoAndProject_ProjectNo(userNo, dto.getProjectNo());
-        if (!isParticipant) {
-            throw new ReviewException(ReviewErrorCode.USER_NOT_PARTICIPATED);
-        }
+        checkReviewOwnership(review, userNo);
+        checkParticipation(userNo, dto.getProjectNo());
 
         ReviewResponseDTO beforeUpdate = toDTO(review);
 
@@ -129,26 +147,21 @@ public class ProjectReviewService {
         return new ReviewUpdateResultDTO(beforeUpdate, afterUpdate);
     }
 
+    // 리뷰 삭제
     @Transactional
     public void deleteReview(Long reviewNo, Integer userNo) {
+        User user = findUserOrThrow(userNo);
+
         ProjectReview review = projectReviewRepository.findById(reviewNo)
                 .orElseThrow(() -> new ReviewException(ReviewErrorCode.REVIEW_NOT_FOUND));
 
-        // 작성자 확인
-        if (!review.getUser().getUserNo().equals(userNo)) {
-            throw new ReviewException(ReviewErrorCode.UNAUTHORIZED_REVIEW_ACCESS);
-        }
+        checkReviewOwnership(review, userNo);
+        checkParticipation(userNo, review.getProject().getProjectNo());
 
-        // 참여 여부 확인
-        boolean isParticipant = participationRepository.existsByUser_UserNoAndProject_ProjectNo(userNo, review.getProject().getProjectNo());
-        if (!isParticipant) {
-            throw new ReviewException(ReviewErrorCode.USER_NOT_PARTICIPATED);
-        }
-
-        // 삭제
         projectReviewRepository.delete(review);
     }
 
+    // 작성 가능한 프로젝트 목록 조회
     public List<ReviewWritableProjectDTO> getWritableProjects(Integer userNo) {
         // 1. 유저가 참여한 프로젝트들 가져오기
         List<Project> participatedProjects = participationRepository.findByUser_UserNo(userNo)
@@ -180,8 +193,8 @@ public class ProjectReviewService {
 
     // 사용자가 작성한 후기 목록 조회
     public List<ReviewResponseDTO> getWrittenReviews(Integer userNo) {
-        User user = userRepository.findById(userNo)
-                .orElseThrow(() -> new ReviewException(ReviewErrorCode.USER_NOT_FOUND));
+        // 존재 확인
+        findUserOrThrow(userNo);
 
         List<ProjectReview> writtenReviews = projectReviewRepository.findByUser_UserNoOrderByCreatedAtDesc(userNo);
 
@@ -189,8 +202,6 @@ public class ProjectReviewService {
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
-
-
 
     private ReviewResponseDTO toDTO(ProjectReview review) {
         return new ReviewResponseDTO(
