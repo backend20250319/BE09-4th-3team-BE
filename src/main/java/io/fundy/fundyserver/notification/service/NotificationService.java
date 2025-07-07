@@ -24,7 +24,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 
-@CrossOrigin(origins = "http://localhost:3000")
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
