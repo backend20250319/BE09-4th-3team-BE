@@ -9,6 +9,7 @@ import io.fundy.fundyserver.register.exception.ErrorCode;
 import io.fundy.fundyserver.register.repository.RefreshTokenRepository;
 import io.fundy.fundyserver.register.security.jwt.JwtTokenProvider;
 import io.fundy.fundyserver.register.service.UserService;
+import io.fundy.fundyserver.register.dto.UserUpdateRequestDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -184,5 +185,19 @@ public class RegisterController {
     @GetMapping("/check-phone")
     public ResponseEntity<Boolean> checkPhone(@RequestParam String phone) {
         return ResponseEntity.ok(userService.isPhoneDuplicate(phone));
+    }
+
+    @PatchMapping("/user/me/profile")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<UserResponseDTO> updateUserProfile(
+            @RequestHeader("Authorization") String authHeader,
+            @Valid @RequestBody UserUpdateRequestDTO req
+    ) {
+        String token = authHeader.replace("Bearer ", "");
+        String userId = jwtProvider.getUserId(token);
+        Integer id = userService.getUserByUserId(userId).getUserNo();
+
+        UserResponseDTO updated = userService.updateUserProfile(id, req);
+        return ResponseEntity.ok(updated);
     }
 }

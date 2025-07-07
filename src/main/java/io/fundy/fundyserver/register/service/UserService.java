@@ -3,6 +3,7 @@ package io.fundy.fundyserver.register.service;
 import io.fundy.fundyserver.register.dto.PasswordChangeRequestDTO;
 import io.fundy.fundyserver.register.dto.UserRequestDTO;
 import io.fundy.fundyserver.register.dto.UserResponseDTO;
+import io.fundy.fundyserver.register.dto.UserUpdateRequestDTO;
 import io.fundy.fundyserver.register.entity.RoleType;
 import io.fundy.fundyserver.register.entity.User;
 import io.fundy.fundyserver.register.entity.UserStatus;
@@ -217,5 +218,30 @@ public class UserService {
     public User getUserEntityByUserId(String userId) {
         return userRepository.findByUserId(userId)
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
+    }
+    @Transactional
+    public UserResponseDTO updateUserProfile(Integer id, UserUpdateRequestDTO req) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
+
+        // 이메일 중복 검사
+        if (!user.getEmail().equals(req.getEmail()) && userRepository.existsByEmail(req.getEmail())) {
+            throw new ApiException(ErrorCode.DUPLICATE_EMAIL);
+        }
+
+        // 닉네임 중복 검사
+        if (!user.getNickname().equals(req.getNickname()) && userRepository.existsByNickname(req.getNickname())) {
+            throw new ApiException(ErrorCode.DUPLICATE_NICKNAME);
+        }
+
+        // 프로필 정보 업데이트
+        user.setNickname(req.getNickname());
+        user.setEmail(req.getEmail());
+        user.setPhone(req.getPhone());
+        user.setAddress(req.getAddress());
+        user.setAddressDetail(req.getAddressDetail());
+
+        userRepository.save(user);
+        return toResponse(user);
     }
 }
