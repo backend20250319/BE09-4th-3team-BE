@@ -3,6 +3,7 @@ server:
 
 upload:
   path: C:\dev\BE09-4th-3team-Image
+  base-url: http://localhost:8888
 #  파일 서버 URL 전달 받은 뒤 작업 할 내용
 #  path: /upload/to/fileserver/
 #  base-url: https://cdn.myserver.com/images

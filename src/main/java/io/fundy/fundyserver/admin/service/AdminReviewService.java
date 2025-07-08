@@ -31,7 +31,6 @@ public class AdminReviewService {
                         .planStatus(review.getPlanStatus())
                         .commStatus(review.getCommStatus())
                         .content(review.getContent())
-                        .imageUrl(review.getImageUrl())
                         .createdAt(review.getCreatedAt())
                         .build()
                 )

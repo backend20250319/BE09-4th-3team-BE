@@ -20,6 +20,8 @@ public class ProjectDetailResponseDTO {
     private Integer currentAmount;
     private String startLine;
     private String deadline;
+    private String creatorName;
+    private String creatorInfo;
     private String status;
     private String thumbnailUrl;
     private List<RewardDTO> rewards;
@@ -35,6 +37,8 @@ public class ProjectDetailResponseDTO {
                 project.getStartLine().toString(),
                 project.getDeadLine().toString(),
                 project.getProductStatus().name(),
+                project.getCreatorName(),
+                project.getCreatorName(),
                 project.getThumbnailUrl(),
                 project.getRewards().stream()
                         .map(RewardDTO::from)

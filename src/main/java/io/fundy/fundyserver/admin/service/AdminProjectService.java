@@ -1,6 +1,7 @@
 package io.fundy.fundyserver.admin.service;
 
 import io.fundy.fundyserver.admin.dto.AdminProjectResponseDto;
+import io.fundy.fundyserver.admin.dto.AdminTotalProjectDto;
 import io.fundy.fundyserver.project.entity.Project;
 import io.fundy.fundyserver.project.entity.ProjectStatus;
 import io.fundy.fundyserver.project.repository.ProjectRepository;
@@ -56,5 +57,21 @@ public class AdminProjectService {
         // 상태 업데이트
         project.setProductStatus(newStatus);
         projectRepository.save(project);
+    }
+
+    /* 프로젝트 전체 상태 */
+    public AdminTotalProjectDto getProjectStatistics() {
+        long pendingCount = projectRepository.countByProductStatus(ProjectStatus.WAITING_APPROVAL);
+        long approvedCount = projectRepository.countByProductStatus(ProjectStatus.APPROVED);
+        long rejectedCount = projectRepository.countByProductStatus(ProjectStatus.REJECTED);
+
+        long totalCount = pendingCount + approvedCount + rejectedCount;
+
+        return AdminTotalProjectDto.builder()
+                .total(totalCount)
+                .pending(pendingCount)
+                .approved(approvedCount)
+                .rejected(rejectedCount)
+                .build();
     }
 }

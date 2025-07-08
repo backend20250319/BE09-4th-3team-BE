@@ -9,6 +9,7 @@ import io.fundy.fundyserver.register.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,15 +25,16 @@ public class ProjectController {
     /***
      * 프로젝트 등록
      * @param requestDTO
-     * @param user
      * @return
      */
-    @PostMapping("/project")
+//    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PostMapping("/upload")
     public ResponseEntity<ProjectResponseDTO> createProject(
-            @Valid @RequestBody ProjectRequestDTO requestDTO,
-                @AuthenticationPrincipal CustomUserDetails user
+            @Valid @RequestBody ProjectRequestDTO requestDTO
+//                @AuthenticationPrincipal CustomUserDetails user
     ) {
-        String userId = user.getUsername(); // 여기서 String 추출
+//        String userId = user.getUsername(); // 여기서 String 추출
+        String userId = "user2";
 
         ProjectResponseDTO response = projectService.createService(requestDTO, userId);
         return ResponseEntity.status(201).body(response);
@@ -44,7 +46,7 @@ public class ProjectController {
      * @param size
      * @return
      */
-    @GetMapping("/project/list")
+    @GetMapping("/list")
     public ResponseEntity<?> getProjectList(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size
@@ -65,7 +67,7 @@ public class ProjectController {
      * @param projectNo
      * @return
      */
-    @GetMapping("/project/{projectNo}")
+    @GetMapping("/{projectNo}")
     public ResponseEntity<?> getProjectDetail(@PathVariable Long projectNo) {
         ProjectDetailResponseDTO responseDTO = projectService.getProjectById(projectNo);
         return ResponseEntity.ok().body(Map.of("success", true, "data", responseDTO));
