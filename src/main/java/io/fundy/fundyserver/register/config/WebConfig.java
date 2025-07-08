@@ -20,10 +20,4 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedHeaders("Content-Type", "Authorization")  // 허용할 헤더 설정
                 .allowCredentials(true);  // 쿠키/인증 정보 허용 시 true
     }
-    @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/images/**")
-                .addResourceLocations("file:/C:/dev/BE09-4th-3team-Image/");
-
-    }
 }

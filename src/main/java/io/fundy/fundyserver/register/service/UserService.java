@@ -3,6 +3,7 @@ package io.fundy.fundyserver.register.service;
 import io.fundy.fundyserver.register.dto.PasswordChangeRequestDTO;
 import io.fundy.fundyserver.register.dto.UserRequestDTO;
 import io.fundy.fundyserver.register.dto.UserResponseDTO;
+import io.fundy.fundyserver.register.dto.UserUpdateRequestDTO;
 import io.fundy.fundyserver.register.entity.RoleType;
 import io.fundy.fundyserver.register.entity.User;
 import io.fundy.fundyserver.register.entity.UserStatus;
@@ -76,7 +77,7 @@ public class UserService {
         }
     }
 
-    // 로그인
+    // 로그인 (강제 LOGOUT 후 로그인 허용)
     @Transactional
     public UserResponseDTO login(String userId, String rawPassword) {
         User user = userRepository.findByUserId(userId)
@@ -85,9 +86,11 @@ public class UserService {
         if (user.getUserStatus() == UserStatus.BANNED) {
             throw new ApiException(ErrorCode.BANNED_USER);
         }
-        // 🚩 이미 로그인 상태면 로그인 거부
+        // 이미 로그인 상태면 LOGOUT 처리 후 로그인 진행
         if (user.getUserStatus() == UserStatus.LOGIN) {
-            throw new ApiException(ErrorCode.ALREADY_LOGGED_IN);
+            user.setUserStatus(UserStatus.LOGOUT);
+            user.setLastLogoutAt(LocalDateTime.now());
+            userRepository.save(user);
         }
         if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
             throw new ApiException(ErrorCode.INVALID_PASSWORD);
@@ -124,7 +127,9 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public boolean isEmailDuplicate(String email) {
-        return userRepository.existsByEmail(email);
+        boolean exists = userRepository.existsByEmail(email);
+        if (exists) logger.error("중복된 이메일: {}", email);
+        return exists;
     }
 
     @Transactional(readOnly = true)
@@ -206,6 +211,7 @@ public class UserService {
                 .email(u.getEmail())
                 .phone(u.getPhone())
                 .address(u.getAddress())
+                .addressDetail(u.getAddressDetail())
                 .userStatus(u.getUserStatus())
                 .roleType(u.getRoleType())
                 .createdAt(u.getCreatedAt())
@@ -214,8 +220,36 @@ public class UserService {
                 .lastLogoutAt(u.getLastLogoutAt())
                 .build();
     }
+
+    @Transactional(readOnly = true)
     public User getUserEntityByUserId(String userId) {
         return userRepository.findByUserId(userId)
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    @Transactional
+    public UserResponseDTO updateUserProfile(Integer id, UserUpdateRequestDTO req) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
+
+        // 이메일 중복 검사
+        if (!user.getEmail().equals(req.getEmail()) && userRepository.existsByEmail(req.getEmail())) {
+            throw new ApiException(ErrorCode.DUPLICATE_EMAIL);
+        }
+
+        // 닉네임 중복 검사
+        if (!user.getNickname().equals(req.getNickname()) && userRepository.existsByNickname(req.getNickname())) {
+            throw new ApiException(ErrorCode.DUPLICATE_NICKNAME);
+        }
+
+        // 프로필 정보 업데이트
+        user.setNickname(req.getNickname());
+        user.setEmail(req.getEmail());
+        user.setPhone(req.getPhone());
+        user.setAddress(req.getAddress());
+        user.setAddressDetail(req.getAddressDetail());
+
+        userRepository.save(user);
+        return toResponse(user);
     }
 }

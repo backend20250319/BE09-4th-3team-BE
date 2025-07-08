@@ -63,21 +63,28 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        // ★ 공개 API만 나열, 나머지 /api/register/user/** 은 필터 적용
+        // 공개 API만 나열, 나머지 /api/register/user/** 은 필터 적용
         List<String> skipPaths = List.of(
                 "/", "/favicon.ico",
-                "/api/register/signup",        // ← 수정: 전체가 아닌 개별
-                "/api/register/login",         // ← 수정
-                "/api/register/refresh",       // ← 수정
-                "/api/register/check-user-id", // ← 수정
-                "/api/register/check-email",   // ← 수정
-                "/api/register/check-nickname",// ← 수정
-                "/api/register/check-phone",   // ← 수정
+                "/api/register/signup",
+                "/api/register/login",
+                "/api/register/refresh",
+                "/api/register/check-user-id",
+                "/api/register/check-email",
+                "/api/register/check-nickname",
+                "/api/register/check-phone",
                 "/api/register/password_update",
                 "/oauth2/authorization/**",
                 "/login/oauth2/code/**",
                 "/api/project/list",
                 "/api/project/{projectNo:\\d+}",
+                "/api/register/send-auth-code",
+                "/api/register/verify-auth-code",
+                "/members/emails/verification-requests",
+                "/members/emails/verifications",
+                "/api/members/emails/verification-requests",
+                "/api/members/emails/verifications",
+                "/api/project/images/ckeditor-upload",
                 "/swagger-ui/**", "/v3/api-docs/**", "/h2-console/**",
                 "/css/**", "/js/**", "/images/**", "/uploads/**"
         );
