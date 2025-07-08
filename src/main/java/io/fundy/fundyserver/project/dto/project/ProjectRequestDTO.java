@@ -23,7 +23,7 @@ public class ProjectRequestDTO {
     private String description;
 
     @NotNull(message = "목표 금액은 필수입니다.")
-    @Min(value = 1000, message = "최소 1,000원 이상이어야 합니다.")
+    @Min(value = 500000, message = "최소 50만원 이상이어야 합니다.")
     private Integer goalAmount;
 
     @NotNull(message = "시작일은 필수입니다.")
