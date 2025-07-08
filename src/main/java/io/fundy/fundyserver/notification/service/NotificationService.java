@@ -4,14 +4,24 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fundy.fundyserver.notification.config.RabbitMQConfig;
 import io.fundy.fundyserver.notification.dto.NotificationMessageDTO;
+import io.fundy.fundyserver.notification.dto.NotificationResponseDTO;
+import io.fundy.fundyserver.notification.entity.Notification;
+import io.fundy.fundyserver.notification.repository.NotificationRepository;
 import io.fundy.fundyserver.project.entity.Project;
 import io.fundy.fundyserver.project.repository.ProjectRepository;
 import io.fundy.fundyserver.review.repository.ParticipationRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
+import java.util.List;
+
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +31,7 @@ public class NotificationService {
     private final ObjectMapper objectMapper;
     private final ProjectRepository projectRepository;
     private final ParticipationRepository participationRepository;
+    private final NotificationRepository notificationRepository;
 
     // ① 후원 완료 알림
     public void sendSupportComplete(Integer userNo, Long projectNo, String projectTitle) {
@@ -88,6 +99,73 @@ public class NotificationService {
 
         String message = projectTitle + " 프로젝트가 목표 금액 미달로 종료되었습니다. 후원이 취소됩니다.";
         sendToQueue("프로젝트 마감 (실패)", message, userNo, projectNo);
+    }
+
+    @Transactional
+    public void deleteNotification(Long notificationNo, Integer userNo) {
+        Notification notification = notificationRepository.findById(notificationNo)
+                .orElseThrow(() -> new RuntimeException("해당 알림이 존재하지 않습니다."));
+
+        // 보안 체크: 자기 알림만 삭제 가능
+        if (!notification.getUser().getUserNo().equals(userNo)) {
+            throw new AccessDeniedException("알림 삭제 권한이 없습니다.");
+        }
+
+        notificationRepository.delete(notification);
+    }
+
+    public long countUnreadNotifications(Integer userNo) {
+        return notificationRepository.countByUser_UserNoAndIsReadFalse(userNo);
+    }
+
+    /**
+     * 특정 사용자의 모든 읽지 않은 알림을 읽음 처리
+     * @param userNo 사용자 번호
+     */
+    @Transactional
+    public void markAllNotificationsAsRead(Integer userNo) {
+        List<Notification> unreadNotifications = notificationRepository.findByUser_UserNoAndIsReadFalse(userNo);
+
+        for (Notification notification : unreadNotifications) {
+            notification.markAsRead();
+        }
+
+        notificationRepository.saveAll(unreadNotifications);
+    }
+
+    // 알림 목록 조회
+    public Page<NotificationResponseDTO> getNotificationsByUserAndType(Integer userNo, String type, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Notification> notificationPage;
+
+        if (type == null || "all".equalsIgnoreCase(type)) {
+            notificationPage = notificationRepository.findByUser_UserNo(userNo, pageable);
+        } else {
+            // 프론트에서 받은 영문 타입을 DB 저장된 한글 타입으로 매핑
+            String mappedType = switch (type) {
+                case "completed" -> "후원 완료";
+                case "success" -> "프로젝트 마감 (성공)";
+                case "fail" -> "프로젝트 마감 (실패)";
+                default -> null;
+            };
+
+            if (mappedType == null) {
+                throw new IllegalArgumentException("알 수 없는 알림 타입입니다: " + type);
+            }
+
+            notificationPage = notificationRepository.findByUser_UserNoAndType(userNo, mappedType, pageable);
+        }
+
+        return notificationPage.map(n -> new NotificationResponseDTO(
+                n.getNotificationNo(),
+                n.getProject().getProjectNo(),
+                n.getProject().getTitle(),
+                n.getType(),
+                n.getMessage(),
+                n.getIsRead(),
+                n.getCreatedAt(),
+                n.getUser().getNickname()
+        ));
     }
 
     // 내부 공통 메서드

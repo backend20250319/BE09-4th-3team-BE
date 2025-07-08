@@ -15,6 +15,10 @@ public interface ProjectReviewRepository extends JpaRepository<ProjectReview, Lo
 
     boolean existsByUserAndProject(User user, Project project);
 
+    List<ProjectReview> findByUser_UserNoOrderByCreatedAtDesc(Integer userNo);
+
+    Page<ProjectReview> findByProject_ProjectNo(Long projectNo, Pageable pageable);
+
     List<ProjectReview> findByUser_UserNo(Integer userNo);
 
 

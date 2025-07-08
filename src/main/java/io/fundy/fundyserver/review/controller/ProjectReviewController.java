@@ -4,6 +4,7 @@ import io.fundy.fundyserver.register.security.CustomUserDetails;
 import io.fundy.fundyserver.review.dto.ReviewRequestDTO;
 import io.fundy.fundyserver.review.dto.ReviewResponseDTO;
 import io.fundy.fundyserver.review.dto.ReviewUpdateResultDTO;
+import io.fundy.fundyserver.review.dto.ReviewWritableProjectDTO;
 import io.fundy.fundyserver.review.service.ProjectReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -13,6 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
 
 @RestController
 @RequestMapping("/reviews")
@@ -31,11 +33,13 @@ public class ProjectReviewController {
 
     // 전체 후기 조회
     @GetMapping("/project/{projectNo}")
-    public ResponseEntity<Page<ReviewResponseDTO>> getReviews(
+    public ResponseEntity<?> getReviews(
             @PathVariable Long projectNo,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size) {
-        Page<ReviewResponseDTO> reviews = reviewService.getReviewsByProjectNo(projectNo, page, size);
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "latest") String sort) {
+
+        Page<?> reviews = reviewService.getReviewsByProjectNo(projectNo, page, size, sort);
         return ResponseEntity.ok(reviews);
     }
 
@@ -68,5 +72,22 @@ public class ProjectReviewController {
         reviewService.deleteReview(reviewNo, userNo);
         return ResponseEntity.noContent().build();  // 204 No Content
     }
+
+    @GetMapping("/writable")
+    public ResponseEntity<List<ReviewWritableProjectDTO>> getWritableProjects(
+            @RequestParam Integer userNo) { // 쿼리 파라미터로 userNo 받기
+
+        List<ReviewWritableProjectDTO> result = reviewService.getWritableProjects(userNo);
+        return ResponseEntity.ok(result);
+    }
+
+    // 사용자가 작성한 후기 조회 (새로 추가)
+    @GetMapping("/written")
+    public ResponseEntity<List<ReviewResponseDTO>> getWrittenReviews(
+            @RequestParam Integer userNo) {
+        List<ReviewResponseDTO> result = reviewService.getWrittenReviews(userNo);
+        return ResponseEntity.ok(result);
+    }
+
 
 }
