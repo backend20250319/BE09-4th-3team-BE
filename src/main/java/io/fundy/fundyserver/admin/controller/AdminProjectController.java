@@ -2,6 +2,7 @@ package io.fundy.fundyserver.admin.controller;
 
 import io.fundy.fundyserver.admin.dto.AdminProjectRequestDto;
 import io.fundy.fundyserver.admin.dto.AdminProjectResponseDto;
+import io.fundy.fundyserver.admin.dto.AdminTotalProjectDto;
 import io.fundy.fundyserver.admin.service.AdminProjectService;
 import io.fundy.fundyserver.project.entity.ProjectStatus;
 import lombok.RequiredArgsConstructor;
@@ -42,4 +43,13 @@ public class AdminProjectController {
         adminProjectService.updateProjectStatus(dto.getProjectId(), ProjectStatus.valueOf(dto.getProductStatus()));
         return ResponseEntity.ok().build();
     }
+
+    /*전체 프로젝트 카운트*/
+    @GetMapping("/count")
+    public ResponseEntity<AdminTotalProjectDto> getProjectStatistics() {
+        AdminTotalProjectDto stats = adminProjectService.getProjectStatistics();
+        return ResponseEntity.ok(stats);
+    }
+
+
 }

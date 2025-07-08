@@ -49,9 +49,11 @@ public class AdminUserService {
         // "BAN" → "BANNED"로 매핑
         if (normalized.equals("BAN")) {
             user.setUserStatus(UserStatus.BANNED);
+        } else if (normalized.equals("UNBAN")) {
+            user.setUserStatus(UserStatus.LOGOUT);  // 또는 LOGIN 으로도 가능
         } else {
             try {
-                user.setUserStatus(UserStatus.valueOf(normalized)); // LOGIN, LOGOUT 등
+                user.setUserStatus(UserStatus.valueOf(normalized));
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException("올바르지 않은 상태값입니다.");
             }

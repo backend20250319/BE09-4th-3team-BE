@@ -17,6 +17,6 @@ public interface ProjectReviewRepository extends JpaRepository<ProjectReview, Lo
 
     List<ProjectReview> findByUser_UserNo(Integer userNo);
 
-    // AdminReviewService에서 추가
+
     Page<ProjectReview> findAll( Pageable pageable);
 }

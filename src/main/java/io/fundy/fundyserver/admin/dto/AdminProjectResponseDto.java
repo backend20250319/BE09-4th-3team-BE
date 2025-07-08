@@ -16,7 +16,7 @@ public class AdminProjectResponseDto {
     private Long projectNo;
     private String title;
     private String description;
-    private String accountNumber;
+    private String accountNumber;      // 새로 추가된 필드
     private Integer goalAmount;
     private Integer currentAmount;
     private LocalDate startLine;
@@ -35,6 +35,7 @@ public class AdminProjectResponseDto {
                 .projectNo(project.getProjectNo())
                 .title(project.getTitle())
                 .description(project.getDescription())
+                .accountNumber(project.getAccountNumber()) // ✅ 추가된 부분
                 .goalAmount(project.getGoalAmount())
                 .currentAmount(project.getCurrentAmount())
                 .startLine(project.getStartLine())

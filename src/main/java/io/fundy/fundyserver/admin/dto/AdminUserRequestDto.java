@@ -8,4 +8,3 @@ public class AdminUserRequestDto {
     private Integer userNo;
     private String userStatus; // 예: "BAN"
 }
-

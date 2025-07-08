@@ -16,7 +16,6 @@ public class AdminReviewResponseDto {
     private int planStatus;
     private int commStatus;
     private String content;
-    private String imageUrl;
     private LocalDateTime createdAt;
 }
 

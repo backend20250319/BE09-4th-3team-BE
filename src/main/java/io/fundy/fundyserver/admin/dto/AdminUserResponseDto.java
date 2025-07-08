@@ -18,7 +18,6 @@ public class AdminUserResponseDto {
     private String nickname;           // 닉네임
     private String phone;              // 전화번호
     private String address;            // 주소
-    private String accountNumber;      // 계좌번호
     private String userStatus;         // LOGIN / LOGOUT / BANNED
     private String roleType;           // USER / ADMIN
     private String createdAt;          // 가입일
