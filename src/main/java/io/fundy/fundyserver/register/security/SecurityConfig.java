@@ -66,19 +66,24 @@ public class SecurityConfig {
         // ★ 공개 API만 나열, 나머지 /api/register/user/** 은 필터 적용
         List<String> skipPaths = List.of(
                 "/", "/favicon.ico",
-                "/api/register/signup",        // ← 수정: 전체가 아닌 개별
-                "/api/register/login",         // ← 수정
-                "/api/register/refresh",       // ← 수정
-                "/api/register/check-user-id", // ← 수정
-                "/api/register/check-email",   // ← 수정
-                "/api/register/check-nickname",// ← 수정
-                "/api/register/check-phone",   // ← 수정
+                "/api/register/signup",
+                "/api/register/login",
+                "/api/register/refresh",
+                "/api/register/check-user-id",
+                "/api/register/check-email",
+                "/api/register/check-nickname",
+                "/api/register/check-phone",
                 "/api/register/password_update",
                 "/oauth2/authorization/**",
                 "/login/oauth2/code/**",
                 "/api/project/list",
                 "/api/project/{projectNo:\\d+}",
-                // 현재 로그인 없이 테스트를 위한 프로젝트 등록 / 이미지 썸네일 업로드 / 에디터 이미지 업로드
+                "/api/register/send-auth-code",
+                "/api/register/verify-auth-code",
+                "/members/emails/verification-requests",
+                "/members/emails/verifications",
+                "/api/members/emails/verification-requests",
+                "/api/members/emails/verifications",
                 "/api/project/upload",
                 "/api/project/images/upload",
                 "/api/project/images/ckeditor-upload",

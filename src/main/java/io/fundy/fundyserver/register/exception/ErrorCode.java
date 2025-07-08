@@ -44,7 +44,17 @@ public enum ErrorCode {
     UNEXPECTED_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "예기치 않은 오류가 발생했습니다."),
     ALREADY_LOGGED_IN(HttpStatus.CONFLICT, "이미 로그인된 상태입니다."),
     PASSWORD_ENCRYPTION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "비밀번호 암호화에 실패했습니다."),
-    DATABASE_SAVE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "사용자 저장에 실패했습니다.");
+    DATABASE_SAVE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "사용자 저장에 실패했습니다."),
+
+    // ✅ 이메일/인증 관련 오류
+    NO_SUCH_ALGORITHM(HttpStatus.INTERNAL_SERVER_ERROR, "지원하지 않는 암호화 알고리즘입니다."),
+    UNABLE_TO_SEND_EMAIL(HttpStatus.INTERNAL_SERVER_ERROR, "이메일 발송 실패"),
+    EMAIL_SEND_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "이메일 전송에 실패했습니다."),
+    INVALID_AUTH_CODE(HttpStatus.UNAUTHORIZED, "잘못된 인증코드입니다."),
+    AUTH_CODE_EXPIRED(HttpStatus.UNAUTHORIZED, "인증코드가 만료되었습니다."),
+    MEMBER_EXISTS(HttpStatus.CONFLICT, "이미 가입된 회원입니다."),
+    TOO_FREQUENT_REQUEST(HttpStatus.TOO_MANY_REQUESTS, "인증번호 재발송은 1분에 1회만 가능합니다."),
+    DAILY_REQUEST_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "인증번호 요청은 하루 5회로 제한됩니다.");
 
     private final HttpStatus status;
     private final String message;

@@ -1,29 +1,20 @@
 package io.fundy.fundyserver.register.security.jwt;
 
-import io.fundy.fundyserver.register.entity.UserStatus;
-import io.fundy.fundyserver.register.entity.oauth.OAuthUser;
-import io.fundy.fundyserver.register.exception.ApiException;
-import io.fundy.fundyserver.register.exception.ErrorCode;
-import io.fundy.fundyserver.register.entity.User;
-import io.fundy.fundyserver.register.repository.OAuthUserRepository;
-import io.fundy.fundyserver.register.repository.UserRepository;
-import io.fundy.fundyserver.register.security.CustomOAuthUserDetails;
-import io.fundy.fundyserver.register.security.CustomUserDetails;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
+import io.fundy.fundyserver.register.security.jwt.JwtTokenProvider;
+import io.fundy.fundyserver.register.repository.OAuthUserRepository;
+import io.fundy.fundyserver.register.repository.UserRepository;
+import io.fundy.fundyserver.register.exception.ApiException;
+import io.fundy.fundyserver.register.exception.ErrorCode;
+import lombok.extern.slf4j.Slf4j;
 
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -44,15 +35,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.userRepo = userRepo;
         this.oauthUserRepo = oauthUserRepo;
         this.skipPaths = skipPaths;
-    }
-
-    /** skipPaths에 매칭되는 요청은 필터 적용 안 함 */
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getServletPath();
-        boolean skip = skipPaths.stream().anyMatch(pattern -> pathMatcher.match(pattern, path));
-        log.debug("shouldNotFilter? [{}] -> {}", path, skip);
-        return skip;
     }
 
     @Override
@@ -83,6 +65,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             } catch (ApiException ex) {
                 if (ex.getErrorCode() == ErrorCode.TOKEN_EXPIRED) {
                     log.warn("[JWT 인증 실패] 토큰 만료: {}", token);
+                    // ★ 순환참조 방지: 여기서 userService 사용하지 않음!
                     sendUnauthorized(response, "만료된 토큰입니다.");
                     return;
                 } else {
@@ -91,78 +74,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     return;
                 }
             }
-
-            // 3) 토큰이 유효하면 userId 추출 → 인증 컨텍스트 설정
-            String userId = tokenProvider.getUserId(token);
-            boolean authenticated = tryUserAuth(userId, token) || tryOAuthUserAuth(userId, token);
-            if (authenticated) {
-                log.info("[JWT 인증 성공] userId: {}", userId);
-            } else {
-                log.warn("[JWT 인증 실패] 유효한 토큰이나 사용자 없음: {}", userId);
-                sendUnauthorized(response, "사용자를 찾을 수 없습니다.");
-                return;
-            }
         }
 
-        // 4) 다음 필터/컨트롤러로 진행
         filterChain.doFilter(request, response);
     }
 
-    /** JWT를 Header 또는 Cookie에서 추출 */
     private String resolveToken(HttpServletRequest request) {
-        String header = request.getHeader("Authorization");
-        if (header != null && header.toLowerCase().startsWith("bearer ")) {
-            return header.substring(7);
-        }
-        if (request.getCookies() != null) {
-            Optional<Cookie> cookie = Arrays.stream(request.getCookies())
-                    .filter(c -> "accessToken".equals(c.getName()))
-                    .findFirst();
-            if (cookie.isPresent()) {
-                return cookie.get().getValue();
-            }
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
         }
         return null;
     }
 
-    /** 일반 회원 인증 */
-    private boolean tryUserAuth(String userId, String token) {
-        return userRepo.findByUserIdAndUserStatusNot(userId, UserStatus.BANNED)
-                .map(user -> {
-                    CustomUserDetails principal = new CustomUserDetails(user);
-                    setAuthContext(principal, token);
-                    return true;
-                }).orElse(false);
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return skipPaths.stream().anyMatch(path -> pathMatcher.match(path, request.getServletPath()));
     }
 
-    /** OAuth 회원 인증 */
-    private boolean tryOAuthUserAuth(String email, String token) {
-        return oauthUserRepo.findByEmail(email)
-                .map(user -> {
-                    if (user.getRole() != null && "BAN".equalsIgnoreCase(user.getRole().name())) {
-                        throw new ApiException(ErrorCode.BANNED_USER);
-                    }
-                    CustomOAuthUserDetails principal = new CustomOAuthUserDetails(user);
-                    setAuthContext(principal, token);
-                    return true;
-                }).orElse(false);
-    }
-
-    /** 인증 컨텍스트 설정 */
-    private void setAuthContext(Object principal, String token) {
-        UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(
-                        principal,
-                        token,
-                        ((org.springframework.security.core.userdetails.UserDetails) principal).getAuthorities()
-                );
-        SecurityContextHolder.getContext().setAuthentication(auth);
-    }
-
-    /** 401 에러 응답 유틸리티 (에러 메시지 반환) */
     private void sendUnauthorized(HttpServletResponse response, String message) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write("{\"error\": \"" + message + "\"}");
+        response.getWriter().write("{\"message\": \"" + message + "\"}");
     }
 }
