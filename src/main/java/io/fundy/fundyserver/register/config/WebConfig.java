@@ -20,4 +20,11 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedHeaders("Content-Type", "Authorization")  // 허용할 헤더 설정
                 .allowCredentials(true);  // 쿠키/인증 정보 허용 시 true
     }
+    private static final String PROFILE_IMAGE_PATH = "file:///C:/profile_images/";
+    // ★ 정적 리소스 매핑
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/profile_images/**")
+                .addResourceLocations(PROFILE_IMAGE_PATH);
+    }
 }

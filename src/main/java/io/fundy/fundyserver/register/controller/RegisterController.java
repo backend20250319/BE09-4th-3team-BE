@@ -16,9 +16,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -350,6 +352,43 @@ public class RegisterController {
         } catch (Exception e) {
             log.error(" 배송지 수정 실패: {}", e.getMessage(), e);
             return ResponseEntity.badRequest().build();
+        }
+    }
+    @PostMapping("/user/me/profile-image")
+    public ResponseEntity<Map<String, String>> uploadProfileImage(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam("file") MultipartFile file
+    ) {
+        try {
+            String token = authHeader.replace("Bearer ", "");
+            String userId = jwtProvider.getUserId(token);
+            Integer userNo = userService.getUserByUserId(userId).getUserNo();
+
+            // 이미지 파일 검증
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "파일이 비어있습니다."));
+            }
+
+            // 파일 크기 제한 (5MB)
+            if (file.getSize() > 5 * 1024 * 1024) {
+                return ResponseEntity.badRequest().body(Map.of("error", "파일 크기는 5MB 이하여야 합니다."));
+            }
+
+            // 파일 형식 검증
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                return ResponseEntity.badRequest().body(Map.of("error", "이미지 파일만 업로드 가능합니다."));
+            }
+
+            // 이미지 저장 및 URL 반환
+            String imageUrl = userService.uploadProfileImage(userNo, file);
+
+            log.info(" 프로필 이미지 업로드 성공: userId={}, imageUrl={}", userId, imageUrl);
+            return ResponseEntity.ok(Map.of("imagePath", imageUrl));
+
+        } catch (Exception e) {
+            log.error(" 프로필 이미지 업로드 실패: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().body(Map.of("error", "이미지 업로드 중 오류가 발생했습니다."));
         }
     }
 }

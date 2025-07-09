@@ -26,4 +26,5 @@ public class UserResponseDTO {
     private LocalDateTime updatedAt;
     private LocalDateTime lastLoginAt;
     private LocalDateTime lastLogoutAt;
+    private String profileImg;
 }
