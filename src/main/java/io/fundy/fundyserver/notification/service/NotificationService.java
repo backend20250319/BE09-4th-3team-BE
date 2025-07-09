@@ -27,6 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NotificationService {
 
+
     private final RabbitTemplate rabbitTemplate;
     private final ObjectMapper objectMapper;
     private final ProjectRepository projectRepository;
@@ -34,28 +35,28 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
 
     // ① 후원 완료 알림
-    public void sendSupportComplete(Integer userNo, Long projectNo, String projectTitle) {
+    public void sendSupportComplete(String userId, Long projectNo, String projectTitle) {
 
         projectRepository.findById(projectNo)
                 .orElseThrow(() -> new RuntimeException("프로젝트를 찾을 수 없습니다."));
 
         // 유저-프로젝트 참여 검증 (후원했는지 확인)
-        boolean participated = participationRepository.existsByUser_UserNoAndProject_ProjectNo(userNo, projectNo);
+        boolean participated = participationRepository.existsByUser_UserIdAndProject_ProjectNo(userId, projectNo);
         if (!participated) {
             throw new IllegalArgumentException("해당 유저는 이 프로젝트에 참여하지 않았습니다.");
         }
 
         String message = projectTitle + " 프로젝트에 후원이 완료되었습니다.";
-        sendToQueue("후원 완료", message, userNo, projectNo);
+        sendToQueue("후원 완료", message, userId, projectNo);
     }
 
     // 프로젝트 성공 마감 알림
-    public void sendProjectSuccess(Integer userNo, Long projectNo, String projectTitle) {
+    public void sendProjectSuccess(String userId, Long projectNo, String projectTitle) {
         Project project = projectRepository.findById(projectNo)
                 .orElseThrow(() -> new RuntimeException("프로젝트를 찾을 수 없습니다."));
 
         // 유저-프로젝트 참여 검증
-        boolean participated = participationRepository.existsByUser_UserNoAndProject_ProjectNo(userNo, projectNo);
+        boolean participated = participationRepository.existsByUser_UserIdAndProject_ProjectNo(userId, projectNo);
         if (!participated) {
             throw new IllegalArgumentException("해당 유저는 이 프로젝트에 참여하지 않았습니다.");
         }
@@ -72,16 +73,16 @@ public class NotificationService {
         }
 
         String message = projectTitle + " 프로젝트가 성공적으로 종료되었습니다!";
-        sendToQueue("프로젝트 마감 (성공)", message, userNo, projectNo);
+        sendToQueue("프로젝트 마감 (성공)", message, userId, projectNo);
     }
 
     // 프로젝트 실패 마감 알림
-    public void sendProjectFail(Integer userNo, Long projectNo, String projectTitle) {
+    public void sendProjectFail(String userId, Long projectNo, String projectTitle) {
         Project project = projectRepository.findById(projectNo)
                 .orElseThrow(() -> new RuntimeException("프로젝트를 찾을 수 없습니다."));
 
         // 유저-프로젝트 참여 검증
-        boolean participated = participationRepository.existsByUser_UserNoAndProject_ProjectNo(userNo, projectNo);
+        boolean participated = participationRepository.existsByUser_UserIdAndProject_ProjectNo(userId, projectNo);
         if (!participated) {
             throw new IllegalArgumentException("해당 유저는 이 프로젝트에 참여하지 않았습니다.");
         }
@@ -98,33 +99,33 @@ public class NotificationService {
         }
 
         String message = projectTitle + " 프로젝트가 목표 금액 미달로 종료되었습니다. 후원이 취소됩니다.";
-        sendToQueue("프로젝트 마감 (실패)", message, userNo, projectNo);
+        sendToQueue("프로젝트 마감 (실패)", message, userId, projectNo);
     }
 
     @Transactional
-    public void deleteNotification(Long notificationNo, Integer userNo) {
+    public void deleteNotification(Long notificationNo, String userId) {
         Notification notification = notificationRepository.findById(notificationNo)
                 .orElseThrow(() -> new RuntimeException("해당 알림이 존재하지 않습니다."));
 
         // 보안 체크: 자기 알림만 삭제 가능
-        if (!notification.getUser().getUserNo().equals(userNo)) {
+        if (!notification.getUser().getUserId().equals(userId)) {
             throw new AccessDeniedException("알림 삭제 권한이 없습니다.");
         }
 
         notificationRepository.delete(notification);
     }
 
-    public long countUnreadNotifications(Integer userNo) {
-        return notificationRepository.countByUser_UserNoAndIsReadFalse(userNo);
+    public long countUnreadNotifications(String userId) {
+        return notificationRepository.countByUser_UserIdAndIsReadFalse(userId);
     }
 
     /**
      * 특정 사용자의 모든 읽지 않은 알림을 읽음 처리
-     * @param userNo 사용자 번호
+     * @param userId 사용자 ID
      */
     @Transactional
-    public void markAllNotificationsAsRead(Integer userNo) {
-        List<Notification> unreadNotifications = notificationRepository.findByUser_UserNoAndIsReadFalse(userNo);
+    public void markAllNotificationsAsRead(String userId) {
+        List<Notification> unreadNotifications = notificationRepository.findByUser_UserIdAndIsReadFalse(userId);
 
         for (Notification notification : unreadNotifications) {
             notification.markAsRead();
@@ -134,12 +135,12 @@ public class NotificationService {
     }
 
     // 알림 목록 조회
-    public Page<NotificationResponseDTO> getNotificationsByUserAndType(Integer userNo, String type, int page, int size) {
+    public Page<NotificationResponseDTO> getNotificationsByUserAndType(String userId, String type, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Notification> notificationPage;
 
         if (type == null || "all".equalsIgnoreCase(type)) {
-            notificationPage = notificationRepository.findByUser_UserNo(userNo, pageable);
+            notificationPage = notificationRepository.findByUser_UserId(userId, pageable);
         } else {
             // 프론트에서 받은 영문 타입을 DB 저장된 한글 타입으로 매핑
             String mappedType = switch (type) {
@@ -153,7 +154,7 @@ public class NotificationService {
                 throw new IllegalArgumentException("알 수 없는 알림 타입입니다: " + type);
             }
 
-            notificationPage = notificationRepository.findByUser_UserNoAndType(userNo, mappedType, pageable);
+            notificationPage = notificationRepository.findByUser_UserIdAndType(userId, mappedType, pageable);
         }
 
         return notificationPage.map(n -> new NotificationResponseDTO(
@@ -169,11 +170,11 @@ public class NotificationService {
     }
 
     // 내부 공통 메서드
-    private void sendToQueue(String type, String content, Integer userNo, Long projectNo) {
+    private void sendToQueue(String type, String content, String userId, Long projectNo) {
         NotificationMessageDTO dto = NotificationMessageDTO.builder()
                 .type(type)
                 .message(content)
-                .userNo(userNo)
+                .userId(userId)
                 .projectNo(projectNo)
                 .build();
 

@@ -28,7 +28,10 @@ public class NotificationConsumer {
         try {
             NotificationMessageDTO message = objectMapper.readValue(messageJson, NotificationMessageDTO.class);
 
-            User user = userRepository.findById(message.getUserNo())
+            // String userId -> Integer userNo 변환
+            Integer userNo = Integer.parseInt(message.getUserId());
+
+            User user = userRepository.findById(userNo)
                     .orElseThrow(() -> new RuntimeException("유저 없음"));
 
             Project project = projectRepository.findById(message.getProjectNo())

@@ -10,12 +10,12 @@ import java.time.LocalDateTime;
 
 
 @Entity
-@Table(name = "project_reviews")
+@Table(name = "reviews")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ProjectReview {
+public class Review {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,7 +27,7 @@ public class ProjectReview {
     private Project project;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_no", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Column(name = "reward_status", nullable = false)
@@ -62,8 +62,8 @@ public class ProjectReview {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public static ProjectReview createReview(Project project, User user, int rewardStatus, int planStatus, int commStatus, String content, String imageUrl) {
-        ProjectReview review = new ProjectReview();
+    public static Review createReview(Project project, User user, int rewardStatus, int planStatus, int commStatus, String content, String imageUrl) {
+        Review review = new Review();
         review.project = project;
         review.user = user;
         review.rewardStatus = rewardStatus;
