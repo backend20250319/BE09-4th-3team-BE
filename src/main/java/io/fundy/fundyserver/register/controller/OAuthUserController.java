@@ -24,9 +24,8 @@ import jakarta.servlet.http.HttpSession;
 @Slf4j
 public class OAuthUserController {
 
-    /**
-     * 로그인된 사용자 정보 조회
-     */
+
+     // 로그인된 사용자 정보 조회
     @GetMapping("/me")
     public SessionUser me(@AuthenticationPrincipal Object principal) {
         if (principal == null) {
@@ -49,9 +48,8 @@ public class OAuthUserController {
         return sessionUser;
     }
 
-    /**
-     * 로그아웃 처리 (세션 무효화 + 쿠키 제거)
-     */
+
+     // 로그아웃 처리 (세션 무효화 + 쿠키 제거)
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
         log.info("🔒 로그아웃 요청 수신");

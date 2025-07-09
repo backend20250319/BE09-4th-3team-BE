@@ -25,17 +25,17 @@ public class JwtTokenProvider {
         this.secretKey = Keys.hmacShaKeyFor(props.getSecret().getBytes(StandardCharsets.UTF_8));
     }
 
-    /** Access Token 생성 */
+    // Access Token 생성
     public String createAccessToken(String userId, RoleType role) {
         return buildToken(userId, props.getAccessTokenExpireMs(), role);
     }
 
-    /** Refresh Token 생성 (Role 없이 생성) */
+    // Refresh Token 생성 (Role 없이 생성)
     public String createRefreshToken(String userId) {
         return buildToken(userId, props.getRefreshTokenExpireMs(), null);
     }
 
-    /** 공통 토큰 생성 로직 */
+    // 공통 토큰 JWT 서명 및 만료 정보 생성 로직
     private String buildToken(String userId, long expirationMs, RoleType role) {
         Date now = new Date();
         Date exp = new Date(now.getTime() + expirationMs);
@@ -53,7 +53,7 @@ public class JwtTokenProvider {
         return builder.compact();
     }
 
-    /** 토큰 유효성 검증 */
+    // 토큰 유효성 검증
     public boolean validateToken(String token) {
         try {
             parseClaims(token);
@@ -63,18 +63,18 @@ public class JwtTokenProvider {
         }
     }
 
-    /** 사용자 ID(email) 추출 */
+    //사용자 ID(email) 추출
     public String getUserId(String token) {
         return parseClaims(token).getPayload().getSubject();
     }
 
-    /** 역할(UserRole) 추출 */
+    // 역할(UserRole) 추출
     public RoleType getRole(String token) {
         String role = parseClaims(token).getPayload().get("role", String.class);
         return RoleType.valueOf(role);
     }
 
-    /** Claims 파싱 (예외 핸들링 포함) */
+    // Claims 파싱 (예외 핸들링 포함)
     private Jws<Claims> parseClaims(String token) {
         try {
             return Jwts.parser()
@@ -88,28 +88,27 @@ public class JwtTokenProvider {
         }
     }
 
-    /** RefreshToken 만료 시간 반환 */
+    // RefreshToken 만료 시간 반환
     public long getRefreshTokenExpiryMs() {
         return props.getRefreshTokenExpireMs();
     }
 
-    /** 설정 반환 */
+    // 설정 반환
     public JwtProperties getProps() {
         return props;
     }
 
-    /** (신규) 토큰 만료시간(exp) 반환 - 만료시각(밀리초) */
+    //  토큰 만료시간(exp) 반환 - 만료시각(밀리초)
     public Date getTokenExpiry(String token) {
         return parseClaims(token).getPayload().getExpiration();
     }
 
-    /** (신규) 토큰이 만료됐는지 즉시 체크 (true = 만료) */
+    // 토큰이 만료됐는지 즉시 체크 (true = 만료)
     public boolean isTokenExpired(String token) {
         try {
             Date exp = getTokenExpiry(token);
             return exp.before(new Date());
         } catch (ApiException e) {
-            // 이미 만료된 경우
             return true;
         }
     }

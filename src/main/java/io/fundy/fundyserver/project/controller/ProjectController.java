@@ -27,13 +27,13 @@ public class ProjectController {
      * @param requestDTO
      * @return
      */
-    @PreAuthorize("hasAuthority('ROLE_USER')")
     @PostMapping("/upload")
     public ResponseEntity<ProjectResponseDTO> createProject(
             @Valid @RequestBody ProjectRequestDTO requestDTO,
-            @AuthenticationPrincipal CustomUserDetails user
+            @AuthenticationPrincipal String user
     ) {
-        String userId = user.getUsername(); // 여기서 String 추출
+
+        String userId = user;
 
         ProjectResponseDTO response = projectService.createService(requestDTO, userId);
         return ResponseEntity.status(201).body(response);
