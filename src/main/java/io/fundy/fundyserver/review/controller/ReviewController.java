@@ -31,10 +31,10 @@ public class ReviewController {
     @PostMapping
     public ResponseEntity<ReviewResponseDTO> createReview(
             @RequestBody ReviewRequestDTO dto,
-            @AuthenticationPrincipal String user
+            @AuthenticationPrincipal String userId
     ) {
 
-        ReviewResponseDTO response = reviewService.createReview(dto, user);
+        ReviewResponseDTO response = reviewService.createReview(dto, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -82,9 +82,9 @@ public class ReviewController {
     @DeleteMapping("/{reviewNo}")
     public ResponseEntity<Map<String, String>> deleteReview(
             @PathVariable Long reviewNo,
-            @AuthenticationPrincipal String user
+            @AuthenticationPrincipal String userId
     ) {
-        reviewService.deleteReview(reviewNo, user);
+        reviewService.deleteReview(reviewNo, userId);
         return ResponseEntity.ok(Map.of("message", "리뷰가 성공적으로 삭제되었습니다."));
     }
 
@@ -93,9 +93,9 @@ public class ReviewController {
      */
     @GetMapping("/writable")
     public ResponseEntity<List<ReviewWritableProjectDTO>> getWritableProjects(
-            @RequestParam String user
+            @RequestParam String userId
     ) {
-        List<ReviewWritableProjectDTO> result = reviewService.getWritableProjects(user);
+        List<ReviewWritableProjectDTO> result = reviewService.getWritableProjects(userId);
         return ResponseEntity.ok(result);
     }
 
@@ -104,9 +104,9 @@ public class ReviewController {
      */
     @GetMapping("/written")
     public ResponseEntity<List<ReviewResponseDTO>> getWrittenReviews(
-            @RequestParam String user
+            @RequestParam String userId
     ) {
-        List<ReviewResponseDTO> result = reviewService.getWrittenReviews(user);
+        List<ReviewResponseDTO> result = reviewService.getWrittenReviews(userId);
         return ResponseEntity.ok(result);
     }
 }

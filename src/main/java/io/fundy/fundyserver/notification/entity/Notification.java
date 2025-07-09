@@ -41,10 +41,16 @@ public class Notification {
     @Column(name = "created_at", nullable =        false)
     private LocalDateTime createdAt;
 
+    @Column(name = "is_deleted", nullable = false)
+    private Boolean isDeleted;
+
     @PrePersist
     public void prePersist() {
         if (isRead == null) {
             isRead = false;
+        }
+        if (isDeleted == null) {
+            isDeleted = false;
         }
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
@@ -53,5 +59,9 @@ public class Notification {
 
     public void markAsRead() {
         this.isRead = true;
+    }
+
+    public void markAsDeleted() {
+        this.isDeleted = true;
     }
 }
