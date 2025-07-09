@@ -85,6 +85,7 @@ public class SecurityConfig {
                 "/api/members/emails/verification-requests",
                 "/api/members/emails/verifications",
                 "/api/project/images/ckeditor-upload",
+                "/api/project/images/upload",
                 "/swagger-ui/**", "/v3/api-docs/**", "/h2-console/**",
                 "/css/**", "/js/**", "/images/**", "/uploads/**"
         );
