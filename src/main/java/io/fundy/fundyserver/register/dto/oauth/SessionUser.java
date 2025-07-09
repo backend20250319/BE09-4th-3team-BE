@@ -15,9 +15,8 @@ public class SessionUser implements Serializable {
     private final String registrationId;
     private final String userType; // OAUTH 또는 NORMAL
 
-    /**
-     * OAuthUser 전용 생성자
-     */
+
+    // OAuthUser 전용 생성자
     public SessionUser(OAuthUser user) {
         this.id = user.getOauthId();
         this.name = user.getName();
@@ -27,9 +26,9 @@ public class SessionUser implements Serializable {
         this.userType = "OAUTH";
     }
 
-    /**
-     * 일반 회원 전용 생성자
-     */
+
+    // 일반 회원 전용 생성자
+
     public SessionUser(User user) {
         this.id = Long.valueOf(user.getUserNo());
         this.name = user.getNickname();
@@ -39,9 +38,9 @@ public class SessionUser implements Serializable {
         this.userType = "NORMAL";
     }
 
-    /**
-     * 직접 필드 지정
-     */
+
+     // 직접 필드 지정
+
     public SessionUser(Long id, String name, String email, String picture, String registrationId, String userType) {
         this.id = id;
         this.name = name;
