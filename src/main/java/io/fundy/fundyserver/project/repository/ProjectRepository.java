@@ -16,7 +16,7 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     Page<Project> findByCategory_CategoryNo(Long categoryNo, Pageable pageable);
 
     /* admin에서 전체 프로젝트 수 세기 위해 추가*/
-    long countByProductStatus(ProjectStatus projectStatus);
+    int countByProductStatus(ProjectStatus status);
 
     @EntityGraph(attributePaths = "category")
     Page<Project> findAll(Pageable pageable);
