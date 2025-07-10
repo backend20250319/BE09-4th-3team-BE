@@ -46,4 +46,6 @@ public class UserRequestDTO {
     @Size(max = 200, message = "※ 상세 주소는 최대 200자까지 입력 가능합니다.")
     private String addressDetail;
 
+    @Size(max = 255, message = "※ 프로필 이미지는 최대 255자까지 입력 가능합니다.")
+    private String profileImg;
 }
