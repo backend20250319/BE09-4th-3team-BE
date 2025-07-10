@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 
 @Service
@@ -57,8 +58,9 @@ public class UserService {
                     .phone(req.getPhone())
                     .address(req.getAddress())
                     .addressDetail(req.getAddressDetail())
-                    .userStatus(UserStatus.LOGOUT) // 가입 후 반드시 LOGOUT
+                    .userStatus(UserStatus.LOGOUT)
                     .roleType(RoleType.USER)
+                    .profileImg(req.getProfileImg()) // ★ 필드 값 세팅
                     .build();
             try {
                 userRepository.save(user);
@@ -86,7 +88,6 @@ public class UserService {
         if (user.getUserStatus() == UserStatus.BANNED) {
             throw new ApiException(ErrorCode.BANNED_USER);
         }
-        // 이미 로그인 상태면 LOGOUT 처리 후 로그인 진행
         if (user.getUserStatus() == UserStatus.LOGIN) {
             user.setUserStatus(UserStatus.LOGOUT);
             user.setLastLogoutAt(LocalDateTime.now());
@@ -101,7 +102,6 @@ public class UserService {
         return toResponse(user);
     }
 
-    // 로그아웃
     @Transactional
     public void logout(String userId) {
         User user = userRepository.findByUserId(userId)
@@ -166,6 +166,13 @@ public class UserService {
         user.setNickname(req.getNickname());
         user.setPhone(req.getPhone());
         user.setAddress(req.getAddress());
+        user.setAddressDetail(req.getAddressDetail());
+
+        // profileImg가 들어왔다면 수정
+        if (req.getProfileImg() != null && !req.getProfileImg().isBlank()) {
+            user.setProfileImg(req.getProfileImg());
+        }
+
         userRepository.save(user);
         return toResponse(user);
     }
@@ -203,6 +210,66 @@ public class UserService {
         return toResponse(user);
     }
 
+    @Transactional(readOnly = true)
+    public User getUserEntityByUserId(String userId) {
+        return userRepository.findByUserId(userId)
+                .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    // 회원정보 수정 시 프로필 이미지 null 덮어쓰기 방지
+    @Transactional
+    public UserResponseDTO updateUserProfile(Integer id, UserUpdateRequestDTO req) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
+
+        if (!user.getEmail().equals(req.getEmail()) && userRepository.existsByEmail(req.getEmail())) {
+            throw new ApiException(ErrorCode.DUPLICATE_EMAIL);
+        }
+        if (!user.getNickname().equals(req.getNickname()) && userRepository.existsByNickname(req.getNickname())) {
+            throw new ApiException(ErrorCode.DUPLICATE_NICKNAME);
+        }
+
+        // 프로필 이미지(이미지 값이 있을 때만 변경)
+        if (req.getProfileImg() != null && !req.getProfileImg().isBlank()) {
+            user.setProfileImg(req.getProfileImg());
+        }
+
+        user.setNickname(req.getNickname());
+        user.setEmail(req.getEmail());
+        user.setPhone(req.getPhone());
+        user.setAddress(req.getAddress());
+        user.setAddressDetail(req.getAddressDetail());
+
+        userRepository.save(user);
+        return toResponse(user);
+    }
+
+    // 프로필 이미지 업로드
+    @Transactional
+    public String uploadProfileImage(Integer userNo, MultipartFile file) {
+        User user = userRepository.findById(userNo)
+                .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
+
+        String uploadDir = "C:/profile_images/"; // 서버 내 실제 경로로 수정
+        String originalFilename = file.getOriginalFilename();
+        String fileName = userNo + "_" + System.currentTimeMillis() + "_" + originalFilename;
+        java.nio.file.Path filePath = java.nio.file.Paths.get(uploadDir, fileName);
+        try {
+            java.nio.file.Files.createDirectories(filePath.getParent());
+            file.transferTo(filePath);
+
+            String imageUrl = "/profile_images/" + fileName;
+            user.setProfileImg(imageUrl);
+            userRepository.save(user);
+
+            return imageUrl;
+        } catch (Exception e) {
+            logger.error("프로필 이미지 업로드 실패: ", e);
+            throw new ApiException(ErrorCode.FILE_UPLOAD_FAILED);
+        }
+    }
+
+    // User -> UserResponseDTO 변환 (profileImg 포함)
     private UserResponseDTO toResponse(User u) {
         return UserResponseDTO.builder()
                 .userNo(u.getUserNo())
@@ -218,38 +285,7 @@ public class UserService {
                 .updatedAt(u.getUpdatedAt())
                 .lastLoginAt(u.getLastLoginAt())
                 .lastLogoutAt(u.getLastLogoutAt())
+                .profileImg(u.getProfileImg())
                 .build();
-    }
-
-    @Transactional(readOnly = true)
-    public User getUserEntityByUserId(String userId) {
-        return userRepository.findByUserId(userId)
-                .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
-    }
-
-    @Transactional
-    public UserResponseDTO updateUserProfile(Integer id, UserUpdateRequestDTO req) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
-
-        // 이메일 중복 검사
-        if (!user.getEmail().equals(req.getEmail()) && userRepository.existsByEmail(req.getEmail())) {
-            throw new ApiException(ErrorCode.DUPLICATE_EMAIL);
-        }
-
-        // 닉네임 중복 검사
-        if (!user.getNickname().equals(req.getNickname()) && userRepository.existsByNickname(req.getNickname())) {
-            throw new ApiException(ErrorCode.DUPLICATE_NICKNAME);
-        }
-
-        // 프로필 정보 업데이트
-        user.setNickname(req.getNickname());
-        user.setEmail(req.getEmail());
-        user.setPhone(req.getPhone());
-        user.setAddress(req.getAddress());
-        user.setAddressDetail(req.getAddressDetail());
-
-        userRepository.save(user);
-        return toResponse(user);
     }
 }
