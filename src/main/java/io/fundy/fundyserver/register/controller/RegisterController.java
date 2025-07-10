@@ -18,6 +18,8 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -380,12 +382,34 @@ public class RegisterController {
                 return ResponseEntity.badRequest().body(Map.of("error", "이미지 파일만 업로드 가능합니다."));
             }
 
-            // 이미지 저장 및 URL 반환
-            String imageUrl = userService.uploadProfileImage(userNo, file);
+            // [1. 저장 경로 준비 (없으면 생성)]
+            String savePath = "C:/profile_images/";
+            File dir = new File(savePath);
+            if (!dir.exists()) dir.mkdirs();
+
+            // [2. 파일명 생성 - (유저번호_타임스탬프_원본이름)]
+            String originalName = file.getOriginalFilename();
+            String ext = "";
+            if (originalName != null && originalName.lastIndexOf(".") != -1) {
+                ext = originalName.substring(originalName.lastIndexOf("."));
+            }
+            String safeName = originalName != null ? originalName.replaceAll("[^a-zA-Z0-9가-힣_.-]", "_") : "";
+            String fileName = userNo + "_" + System.currentTimeMillis() + "_" + safeName;
+            // (파일명에 한글, 공백, 특수문자 있으면 _ 로 대체)
+
+            // [3. 파일 저장]
+            File dest = new File(savePath + fileName);
+            file.transferTo(dest);
+
+            // [4. DB에는 "/profile_images/파일명" 만 저장하도록 반환]
+            String imageUrl = "/profile_images/" + fileName;
+            // 필요하다면 userService.updateProfileImagePath(userNo, imageUrl); 호출해서 DB 저장
 
             log.info(" 프로필 이미지 업로드 성공: userId={}, imageUrl={}", userId, imageUrl);
             return ResponseEntity.ok(Map.of("imagePath", imageUrl));
-
+        } catch (IOException e) {
+            log.error(" 이미지 저장 중 IOException 발생: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().body(Map.of("error", "이미지 저장 중 오류가 발생했습니다."));
         } catch (Exception e) {
             log.error(" 프로필 이미지 업로드 실패: {}", e.getMessage(), e);
             return ResponseEntity.badRequest().body(Map.of("error", "이미지 업로드 중 오류가 발생했습니다."));
