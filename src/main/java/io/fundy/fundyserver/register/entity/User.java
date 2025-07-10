@@ -85,4 +85,8 @@ public class User {
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
+
+    // 프로필 이미지 URL (nullable)
+    @Column(name = "profile_img", length = 255)
+    private String profileImg;
 }
