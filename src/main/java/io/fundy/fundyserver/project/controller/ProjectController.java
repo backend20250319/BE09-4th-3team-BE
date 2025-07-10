@@ -8,6 +8,9 @@ import io.fundy.fundyserver.project.service.ProjectService;
 import io.fundy.fundyserver.register.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -47,10 +50,9 @@ public class ProjectController {
      */
     @GetMapping("/list")
     public ResponseEntity<?> getProjectList(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size
+            @PageableDefault(size = 12, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        ProjectListPageResponseDTO response = projectService.getProjects(page, size);
+        ProjectListPageResponseDTO response = projectService.getProjects(pageable);
 
         return ResponseEntity.ok(
                 Map.of(
@@ -60,6 +62,7 @@ public class ProjectController {
                 )
         );
     }
+
 
     /***
      * 프로젝트 상세 조회
