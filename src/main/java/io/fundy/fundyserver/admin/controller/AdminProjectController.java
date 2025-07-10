@@ -8,6 +8,7 @@ import io.fundy.fundyserver.project.entity.ProjectStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,6 +25,7 @@ public class AdminProjectController {
      * @param categoryNo 카테고리 ID (선택)
      * @return 페이징된 프로젝트 목록
      */
+
     @GetMapping
     public ResponseEntity<Page<AdminProjectResponseDto>> getProjects(
             @RequestParam(defaultValue = "0") int page,
