@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class ProjectReviewService {
+public class ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;

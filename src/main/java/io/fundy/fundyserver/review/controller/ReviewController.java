@@ -4,7 +4,7 @@ import io.fundy.fundyserver.review.dto.ReviewRequestDTO;
 import io.fundy.fundyserver.review.dto.ReviewResponseDTO;
 import io.fundy.fundyserver.review.dto.ReviewUpdateResultDTO;
 import io.fundy.fundyserver.review.dto.ReviewWritableProjectDTO;
-import io.fundy.fundyserver.review.service.ProjectReviewService;
+import io.fundy.fundyserver.review.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -23,7 +23,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ReviewController {
 
-    private final ProjectReviewService reviewService;
+    private final ReviewService reviewService;
 
     @PostMapping
     public ResponseEntity<ReviewResponseDTO> createReview(
