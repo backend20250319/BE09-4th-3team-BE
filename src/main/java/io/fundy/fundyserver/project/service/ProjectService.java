@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,13 +62,8 @@ public class ProjectService {
      * @param size
      * @return
      */
-    public ProjectListPageResponseDTO getProjects(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
+    public ProjectListPageResponseDTO getProjects(Pageable pageable) {
         Page<Project> projectPage = projectRepository.findAll(pageable);
-
-        System.out.println("총 프로젝트 수: " + projectPage.getTotalElements());
-        System.out.println("조회된 프로젝트: " + projectPage.getContent().size());
-        projectPage.getContent().forEach(p -> System.out.println(p.getTitle()));
 
         List<ProjectListResponseDTO> dtoList = projectPage.stream()
                 .map(p -> new ProjectListResponseDTO(
@@ -91,6 +87,7 @@ public class ProjectService {
 
         return new ProjectListPageResponseDTO(dtoList, pagination);
     }
+
 
     private int calculatePercent(Project project) {
         if (project.getGoalAmount() == 0) return 0;
