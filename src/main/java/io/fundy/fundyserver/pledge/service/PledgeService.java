@@ -141,4 +141,61 @@ public class PledgeService {
         // 일반적으로 마감일이 지난 후에 최종 상태를 결정하므로 여기서는 구현하지 않음
         // 실제 구현 시 별도의 스케줄러를 통해 마감일에 프로젝트 상태를 업데이트하는 것이 좋습니다
     }
+
+    /**
+     * 사용자 본인의 후원 상세정보 조회
+     * @param pledgeId 후원 ID
+     * @param userId 사용자 ID
+     * @return 사용자의 후원 상세정보
+     * @throws ApiException 해당 후원이 존재하지 않거나 본인의 후원이 아닌 경우
+     */
+    @Transactional(readOnly = true)
+    public MyPledgeResponseDTO getMyPledgeById(Long pledgeId, String userId) {
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
+
+        Pledge pledge = pledgeRepository.findById(pledgeId)
+                .orElseThrow(() -> new ApiException(ErrorCode.PLEDGE_NOT_FOUND));
+
+        // 본인의 후원인지 검증
+        if (!pledge.getUser().getUserId().equals(userId)) {
+            throw new ApiException(ErrorCode.UNAUTHORIZED);
+        }
+
+        return new MyPledgeResponseDTO(
+                pledge.getPledgeNo(),
+                pledge.getProject().getProjectNo(),
+                pledge.getProject().getTitle(),
+                pledge.getReward().getTitle(),
+                pledge.getTotalAmount(),
+                pledge.getDeliveryAddress(),
+                pledge.getDeliveryPhone(),
+                pledge.getRecipientName(),
+                pledge.getCreatedAt()
+        );
+    }
+
+    /**
+     * 후원 ID로 해당 후원이 프로젝트의 몇 번째 후원인지 조회
+     * @param pledgeId 후원 ID
+     * @return 해당 후원의 프로젝트 내 순번
+     */
+    @Transactional(readOnly = true)
+    public Integer getPledgeOrderInProject(Long pledgeId, String userId) {
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
+
+        Pledge pledge = pledgeRepository.findById(pledgeId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 후원을 찾을 수 없습니다: " + pledgeId));
+
+        // 본인의 후원인지 검증
+        if (!pledge.getUser().getUserId().equals(userId)) {
+            throw new ApiException(ErrorCode.UNAUTHORIZED);
+        }
+    
+        return pledgeRepository.countByProjectAndCreatedAtBefore(
+                pledge.getProject(), 
+                pledge.getCreatedAt()
+        ) + 1;
+    }
 }
