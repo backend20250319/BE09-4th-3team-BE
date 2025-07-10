@@ -288,4 +288,11 @@ public class UserService {
                 .profileImg(u.getProfileImg())
                 .build();
     }
+    @Transactional
+    public void updateProfileImagePath(Integer userNo, String imageUrl) {
+        User user = userRepository.findById(userNo)
+                .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
+        user.setProfileImg(imageUrl);
+        userRepository.save(user);
+    }
 }

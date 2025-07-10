@@ -23,7 +23,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     Optional<User> findByNickname(String nickname);
     boolean existsByNickname(String nickname);
 
-    // 📌 전화번호 중복 검사
+    // 전화번호 중복 검사
     boolean existsByPhone(String phone);
 
     // 로그인 시 BAN 상태 사용자는 제외하고 조회

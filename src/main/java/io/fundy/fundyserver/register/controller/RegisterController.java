@@ -403,7 +403,7 @@ public class RegisterController {
 
             // [4. DB에는 "/profile_images/파일명" 만 저장하도록 반환]
             String imageUrl = "/profile_images/" + fileName;
-            // 필요하다면 userService.updateProfileImagePath(userNo, imageUrl); 호출해서 DB 저장
+            userService.updateProfileImagePath(userNo, imageUrl); // 호출해서 DB 저장
 
             log.info(" 프로필 이미지 업로드 성공: userId={}, imageUrl={}", userId, imageUrl);
             return ResponseEntity.ok(Map.of("imagePath", imageUrl));

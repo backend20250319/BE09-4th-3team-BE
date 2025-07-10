@@ -24,10 +24,10 @@ public class AddressService {
     private final AddressRepository addressRepository;
     private final UserRepository userRepository;
 
-    // ✅ 배송지 등록
+    // 배송지 등록
     @Transactional
     public AddressResponseDTO addAddress(Integer userNo, AddressRequestDTO req) {
-        log.info("✅ 배송지 등록 시작: userNo={}, recipientName={}", userNo, req.getName());
+        log.info(" 배송지 등록 시작: userNo={}, recipientName={}", userNo, req.getName());
 
         User user = userRepository.findById(userNo)
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
@@ -35,7 +35,7 @@ public class AddressService {
         // 기본 배송지로 설정하는 경우, 기존 기본 배송지 해제
         if (req.isDefault()) {
             addressRepository.clearDefaultAddress(userNo);
-            log.info("✅ 기존 기본 배송지 해제 완료: userNo={}", userNo);
+            log.info(" 기존 기본 배송지 해제 완료: userNo={}", userNo);
         }
 
         Address address = Address.builder()
@@ -49,15 +49,15 @@ public class AddressService {
                 .build();
 
         Address saved = addressRepository.save(address);
-        log.info("✅ 배송지 등록 완료: addressId={}", saved.getId());
+        log.info(" 배송지 등록 완료: addressId={}", saved.getId());
 
         return toResponse(saved);
     }
 
-    // ✅ 배송지 목록 조회
+    // 배송지 목록 조회
     @Transactional(readOnly = true)
     public List<AddressResponseDTO> getAddressesByUserNo(Integer userNo) {
-        log.info("✅ 배송지 목록 조회 시작: userNo={}", userNo);
+        log.info("배송지 목록 조회 시작: userNo={}", userNo);
 
         User user = userRepository.findById(userNo)
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
@@ -67,30 +67,30 @@ public class AddressService {
                 .map(this::toResponse)
                 .collect(Collectors.toList());
 
-        log.info("✅ 배송지 목록 조회 완료: userNo={}, count={}", userNo, addresses.size());
+        log.info("배송지 목록 조회 완료: userNo={}, count={}", userNo, addresses.size());
         return addresses;
     }
 
-    // ✅ 배송지 삭제
+    // 배송지 삭제
     @Transactional
     public void deleteAddress(Integer userNo, Long addressId) {
-        log.info("✅ 배송지 삭제 시작: userNo={}, addressId={}", userNo, addressId);
+        log.info("배송지 삭제 시작: userNo={}, addressId={}", userNo, addressId);
 
         Address address = addressRepository.findByIdAndUserUserNo(addressId, userNo)
                 .orElseThrow(() -> new ApiException(ErrorCode.ADDRESS_NOT_FOUND));
 
         addressRepository.delete(address);
-        log.info("✅ 배송지 삭제 완료: addressId={}", addressId);
+        log.info("배송지 삭제 완료: addressId={}", addressId);
     }
 
-    // ✅ 기본 배송지 설정
+    // 기본 배송지 설정
     @Transactional
     public void setDefaultAddress(Integer userNo, Long addressId) {
-        log.info("✅ 기본 배송지 설정 시작: userNo={}, addressId={}", userNo, addressId);
+        log.info("기본 배송지 설정 시작: userNo={}, addressId={}", userNo, addressId);
 
         // 기존 기본 배송지 해제
         addressRepository.clearDefaultAddress(userNo);
-        log.info("✅ 기존 기본 배송지 해제 완료: userNo={}", userNo);
+        log.info("기존 기본 배송지 해제 완료: userNo={}", userNo);
 
         // 새로운 기본 배송지 설정
         Address address = addressRepository.findByIdAndUserUserNo(addressId, userNo)
@@ -98,13 +98,13 @@ public class AddressService {
 
         address.setIsDefault(true);
         addressRepository.save(address);
-        log.info("✅ 기본 배송지 설정 완료: addressId={}", addressId);
+        log.info("기본 배송지 설정 완료: addressId={}", addressId);
     }
 
     // ✅ 배송지 수정
     @Transactional
     public AddressResponseDTO updateAddress(Integer userNo, Long addressId, AddressRequestDTO req) {
-        log.info("✅ 배송지 수정 시작: userNo={}, addressId={}", userNo, addressId);
+        log.info("배송지 수정 시작: userNo={}, addressId={}", userNo, addressId);
 
         Address address = addressRepository.findByIdAndUserUserNo(addressId, userNo)
                 .orElseThrow(() -> new ApiException(ErrorCode.ADDRESS_NOT_FOUND));
@@ -112,7 +112,7 @@ public class AddressService {
         // 기본 배송지로 변경하는 경우, 기존 기본 배송지 해제
         if (req.isDefault() && !address.getIsDefault()) {
             addressRepository.clearDefaultAddress(userNo);
-            log.info("✅ 기존 기본 배송지 해제 완료: userNo={}", userNo);
+            log.info("기존 기본 배송지 해제 완료: userNo={}", userNo);
         }
 
         // 배송지 정보 업데이트
@@ -124,35 +124,35 @@ public class AddressService {
         address.setIsDefault(req.isDefault());
 
         Address updated = addressRepository.save(address);
-        log.info("✅ 배송지 수정 완료: addressId={}", addressId);
+        log.info("배송지 수정 완료: addressId={}", addressId);
 
         return toResponse(updated);
     }
 
-    // ✅ 기본 배송지 조회
+    // 기본 배송지 조회
     @Transactional(readOnly = true)
     public AddressResponseDTO getDefaultAddress(Integer userNo) {
-        log.info("✅ 기본 배송지 조회 시작: userNo={}", userNo);
+        log.info("기본 배송지 조회 시작: userNo={}", userNo);
 
         Address defaultAddress = addressRepository.findByUserUserNoAndIsDefaultTrue(userNo)
                 .orElse(null);
 
         if (defaultAddress == null) {
-            log.info("✅ 기본 배송지 없음: userNo={}", userNo);
+            log.info("기본 배송지 없음: userNo={}", userNo);
             return null;
         }
 
-        log.info("✅ 기본 배송지 조회 완료: addressId={}", defaultAddress.getId());
+        log.info("기본 배송지 조회 완료: addressId={}", defaultAddress.getId());
         return toResponse(defaultAddress);
     }
 
-    // ✅ 배송지 개수 조회
+    // 배송지 개수 조회
     @Transactional(readOnly = true)
     public long getAddressCount(Integer userNo) {
         return addressRepository.countByUserUserNo(userNo);
     }
 
-    // ✅ Address → AddressResponseDTO 변환
+    // Address → AddressResponseDTO 변환
     private AddressResponseDTO toResponse(Address address) {
         return AddressResponseDTO.builder()
                 .id(address.getId())
