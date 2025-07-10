@@ -87,6 +87,6 @@ public class User {
     }
 
     // 프로필 이미지 URL (nullable)
-    @Column(name = "profile_img", length = 255)
-    private String profileImg;
+//    @Column(name = "profile_img", length = 255)
+//    private String profileImg;
 }
