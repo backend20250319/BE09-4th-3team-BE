@@ -88,6 +88,9 @@ public class UserService {
         if (user.getUserStatus() == UserStatus.BANNED) {
             throw new ApiException(ErrorCode.BANNED_USER);
         }
+        if (user.getUserStatus() == UserStatus.QUIT) {
+            throw new ApiException(ErrorCode.QUIT_USER);
+        }
         if (user.getUserStatus() == UserStatus.LOGIN) {
             user.setUserStatus(UserStatus.LOGOUT);
             user.setLastLogoutAt(LocalDateTime.now());

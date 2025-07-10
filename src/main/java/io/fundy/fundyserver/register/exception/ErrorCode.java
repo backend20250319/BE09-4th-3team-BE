@@ -17,6 +17,7 @@ public enum ErrorCode {
     INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "비밀번호가 일치하지 않습니다."),
     PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "현재 비밀번호가 일치하지 않습니다."),
     BANNED_USER(HttpStatus.FORBIDDEN, "정지된 계정입니다."),
+    QUIT_USER(HttpStatus.FORBIDDEN, "탈퇴한 회원입니다."),
 
     // 토큰 관련 오류
     TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "토큰이 만료되었습니다."),
