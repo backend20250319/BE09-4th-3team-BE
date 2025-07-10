@@ -81,4 +81,14 @@ public class Review {
         this.content = content;
         this.imageUrl = imageUrl;
     }
+
+    // 리뷰 재활성화 메서드 추가
+    public void reactivateReview(Integer rewardStatus, Integer planStatus, Integer commStatus, String content, String imageUrl) {
+        this.rewardStatus = rewardStatus;
+        this.planStatus = planStatus;
+        this.commStatus = commStatus;
+        this.content = content;
+        this.imageUrl = imageUrl;
+        this.updatedAt = LocalDateTime.now();
+    }
 }
