@@ -3,7 +3,6 @@ package io.fundy.fundyserver.review.service;
 import io.fundy.fundyserver.pledge.dto.MyPledgeResponseDTO;
 import io.fundy.fundyserver.pledge.service.PledgeService;
 import io.fundy.fundyserver.project.entity.Project;
-import io.fundy.fundyserver.project.entity.Reward;
 import io.fundy.fundyserver.project.repository.ProjectRepository;
 import io.fundy.fundyserver.register.entity.RoleType;
 import io.fundy.fundyserver.register.entity.User;
@@ -148,7 +147,8 @@ public class ReviewService {
 
     @Transactional
     public void deleteReview(Long reviewNo, String userId) {
-        User user = userRepository.findByUserId(userId)
+
+        userRepository.findByUserId(userId)
                 .orElseThrow(() -> new ReviewException(ReviewErrorCode.USER_NOT_FOUND));
 
         Review review = reviewRepository.findById(reviewNo)
