@@ -17,8 +17,8 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     // 🔹 프로젝트 저장 (save는 JpaRepository에 있지만 명시적으로 재정의한 것)
     Project save(Project project);
 
-    // 🔹 특정 카테고리의 프로젝트 목록 조회 (관리자 전용 페이지 등에서 사용)
-    Page<Project> findByCategory_CategoryNo(Long categoryNo, Pageable pageable);
+    // 🔹 특정 상태값 프로젝트 목록 조회 (관리자 전용 페이지 등에서 사용)
+    Page<Project> findByProductStatus(ProjectStatus productStatus, Pageable pageable);
 
     // 🔹 특정 상태의 전체 프로젝트 수 카운트 (ex. APPROVED 몇 개 있는지)
     int countByProductStatus(ProjectStatus status);
