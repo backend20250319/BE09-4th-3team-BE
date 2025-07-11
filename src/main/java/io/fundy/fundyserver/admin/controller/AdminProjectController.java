@@ -8,6 +8,7 @@ import io.fundy.fundyserver.project.entity.ProjectStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,15 +22,16 @@ public class AdminProjectController {
      * 전체 프로젝트 조회 (카테고리 필터 가능)
      *
      * @param page 페이지 번호 (0부터 시작)
-     * @param categoryNo 카테고리 ID (선택)
+     * @param productStatus 카테고리 ID (선택)
      * @return 페이징된 프로젝트 목록
      */
+
     @GetMapping
     public ResponseEntity<Page<AdminProjectResponseDto>> getProjects(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(required = false) Long categoryNo
+            @RequestParam(required = false) ProjectStatus productStatus
     ) {
-        Page<AdminProjectResponseDto> result = adminProjectService.getAllProjects(page, categoryNo);
+        Page<AdminProjectResponseDto> result = adminProjectService.getAllProjects(page, productStatus);
         return ResponseEntity.ok(result);
     }
 
