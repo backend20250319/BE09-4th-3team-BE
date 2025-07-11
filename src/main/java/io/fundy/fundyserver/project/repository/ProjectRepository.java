@@ -26,11 +26,18 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     List<Project> findAllByProjectNoIn(Collection<Long> projectNos);
 
     // 마감일 이후 데이터는 가져오지 않게 함
-    Page<Project> findByProductStatusAndDeadLineAfter(ProjectStatus status, LocalDate today, Pageable pageable);
+    Page<Project> findByProductStatusInAndDeadLineGreaterThanEqual(
+            List<ProjectStatus> statuses, LocalDate today, Pageable pageable
+    );
+
+    List<Project> findByProductStatusAndStartLineLessThanEqual(ProjectStatus status, LocalDate date);
+
+    long countByProductStatusInAndDeadLineGreaterThanEqual(List<ProjectStatus> statuses, LocalDate today);
 
     // 마감일이 지나지 않은 승인 처리 된 전체 프로젝트의 수
-    long countByProductStatusAndDeadLineAfter(ProjectStatus status, LocalDate today);
+    long countByProductStatusAndDeadLineGreaterThanEqual(ProjectStatus status, LocalDate today);
 
+    List<Project> findByProductStatusInAndDeadLineBefore(List<ProjectStatus> statuses, LocalDate date);
 
     @EntityGraph(attributePaths = "category")
     Page<Project> findAll(Pageable pageable);

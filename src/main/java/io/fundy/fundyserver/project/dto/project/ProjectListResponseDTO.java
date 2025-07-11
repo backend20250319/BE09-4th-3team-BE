@@ -18,5 +18,6 @@ public class ProjectListResponseDTO {
     private String startLine;
     private String deadLine;
     private String categoryName;
+    private String status;
     private int percent;
 }
