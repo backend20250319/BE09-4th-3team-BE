@@ -7,8 +7,6 @@ import io.fundy.fundyserver.notification.dto.NotificationMessageDTO;
 import io.fundy.fundyserver.notification.dto.NotificationResponseDTO;
 import io.fundy.fundyserver.notification.entity.Notification;
 import io.fundy.fundyserver.notification.repository.NotificationRepository;
-import io.fundy.fundyserver.pledge.dto.MyPledgeResponseDTO;
-import io.fundy.fundyserver.pledge.service.PledgeService;
 import io.fundy.fundyserver.project.entity.Project;
 import io.fundy.fundyserver.project.repository.ProjectRepository;
 import jakarta.transaction.Transactional;
