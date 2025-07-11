@@ -234,6 +234,8 @@ public class ReviewService {
                 .toList();
     }
 
+
+
     private List<MyPledgeResponseDTO> getPledgesSafely(String userId) {
         try {
             List<MyPledgeResponseDTO> pledges = pledgeService.getMyPledges(userId);
@@ -249,7 +251,19 @@ public class ReviewService {
         List<Review> writtenReviews = reviewRepository.findByUser_UserIdOrderByCreatedAtDesc(userId);
 
         return writtenReviews.stream()
-                .map(this::toDTO)
+                .map(review -> new ReviewResponseDTO(
+                        review.getReviewNo(),
+                        review.getProject().getProjectNo(),
+                        review.getProject().getTitle(),
+                        review.getUser().getNickname(),
+                        review.getRewardStatus(),
+                        review.getPlanStatus(),
+                        review.getCommStatus(),
+                        review.getContent(),
+                        review.getProject().getThumbnailUrl(),
+                        review.getCreatedAt(),
+                        review.getUpdatedAt()
+                ))
                 .collect(Collectors.toList());
     }
 
