@@ -1,8 +1,8 @@
 package io.fundy.fundyserver.admin.service;
 
 import io.fundy.fundyserver.admin.dto.AdminReviewResponseDto;
-import io.fundy.fundyserver.review.entity.ProjectReview;
-import io.fundy.fundyserver.review.repository.ProjectReviewRepository;
+import io.fundy.fundyserver.review.entity.Review;
+import io.fundy.fundyserver.review.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AdminReviewService {
 
-    private final ProjectReviewRepository reviewRepository;
+    private final ReviewRepository reviewRepository;
 
     /**
      * 페이지네이션이 적용된 리뷰 목록 반환
@@ -22,7 +22,7 @@ public class AdminReviewService {
      */
     public Page<AdminReviewResponseDto> getAllReviews(int page) {
         PageRequest pageable = PageRequest.of(page, 10); // 한 페이지에 10개
-        Page<ProjectReview> reviewPage = reviewRepository.findAll(pageable);
+        Page<Review> reviewPage = reviewRepository.findAll(pageable);
 
         return reviewPage.map(review -> AdminReviewResponseDto.builder()
                 .reviewNo(review.getReviewNo())
