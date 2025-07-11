@@ -251,19 +251,7 @@ public class ReviewService {
         List<Review> writtenReviews = reviewRepository.findByUser_UserIdOrderByCreatedAtDesc(userId);
 
         return writtenReviews.stream()
-                .map(review -> new ReviewResponseDTO(
-                        review.getReviewNo(),
-                        review.getProject().getProjectNo(),
-                        review.getProject().getTitle(),
-                        review.getUser().getNickname(),
-                        review.getRewardStatus(),
-                        review.getPlanStatus(),
-                        review.getCommStatus(),
-                        review.getContent(),
-                        review.getProject().getThumbnailUrl(),
-                        review.getCreatedAt(),
-                        review.getUpdatedAt()
-                ))
+                .map(this::toDTO)
                 .collect(Collectors.toList());
     }
 
@@ -274,6 +262,7 @@ public class ReviewService {
                 review.getReviewNo(),
                 project != null ? project.getProjectNo() : null,
                 project != null ? project.getTitle() : null,
+                project != null ? project.getCreatorName() : null,
                 review.getUser() != null ? review.getUser().getNickname() : null,
                 review.getRewardStatus(),
                 review.getPlanStatus(),

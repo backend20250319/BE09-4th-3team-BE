@@ -34,7 +34,6 @@ public class NotificationController {
             @RequestBody NotificationSendRequestDTO dto,
             @AuthenticationPrincipal String userId
     ) {
-        // 후원자 닉네임 조회 (userService 또는 userRepository에서 직접 조회)
         String supporterName = userRepository.findByUserId(userId)
                 .map(User::getNickname)
                 .orElse("알 수 없는 사용자");
@@ -43,12 +42,6 @@ public class NotificationController {
         return ResponseEntity.ok("후원 완료 알림이 성공적으로 전송되었습니다.");
     }
 
-    /**
-     * 프로젝트 성공 마감 알림 전송
-     * @param dto 프로젝트 번호, 제목 포함 DTO
-     * @param userId 인증된 사용자 ID
-     * @return 성공 또는 에러 메시지와 상태 코드 반환
-     */
     @PostMapping("/success")
     public ResponseEntity<String> sendSuccess(
             @RequestBody NotificationSendRequestDTO dto,
@@ -66,12 +59,6 @@ public class NotificationController {
         }
     }
 
-    /**
-     * 프로젝트 실패 마감 알림 전송
-     * @param dto 프로젝트 번호, 제목 포함 DTO
-     * @param userId 인증된 사용자 ID
-     * @return 성공 또는 에러 메시지와 상태 코드 반환
-     */
     @PostMapping("/fail")
     public ResponseEntity<String> sendFail(
             @RequestBody NotificationSendRequestDTO dto,
