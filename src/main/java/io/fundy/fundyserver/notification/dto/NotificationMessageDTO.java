@@ -5,7 +5,7 @@ import lombok.*;
 @Getter
 @Builder
 public class NotificationMessageDTO {
-    private Integer userNo;
+    private String userId;
     private Long projectNo;
     private String type;
     private String message;

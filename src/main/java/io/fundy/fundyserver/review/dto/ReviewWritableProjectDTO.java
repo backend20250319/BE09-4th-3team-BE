@@ -5,14 +5,16 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @AllArgsConstructor
 public class ReviewWritableProjectDTO {
     private Long projectNo;
-    private String title;
-    private String imageUrl;
-    private String rewardName;
-    private String priceText;
-    private LocalDate endDate;
+    private String projectTitle;
+    private String projectThumbnailUrl;
+    private String rewardTitle;
+    private Integer rewardAmount;
+    private LocalDate deadLine;
+    private LocalDateTime pledgeCreatedAt;
 }

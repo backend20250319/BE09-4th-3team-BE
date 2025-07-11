@@ -10,7 +10,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class NotificationSendRequestDTO {
-    private Integer userNo;
+    private String userId;
     private Long projectNo;
     private String projectTitle;
 }

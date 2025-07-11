@@ -10,7 +10,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class NotificationRequestDTO {
-    private Integer userNo;
+    private String userId;
     private String type = "all";
     private int page = 0;
     private int size = 5;

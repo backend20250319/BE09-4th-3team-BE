@@ -5,15 +5,23 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum Satisfaction {
 
-    BAD(1), AVERAGE(3), GOOD(5);
+    bad(1, "bad"),
+    neutral(2, "neutral"),
+    good(3, "good");
 
     private final int value;
+    private final String name;
 
-    Satisfaction(int value) {
+    Satisfaction(int value, String name) {
         this.value = value;
+        this.name = name;
     }
 
     @JsonValue
+    public String getName() {
+        return name;
+    }
+
     public int getValue() {
         return value;
     }
