@@ -52,13 +52,13 @@ public class OAuthUserController {
      // 로그아웃 처리 (세션 무효화 + 쿠키 제거)
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
-        log.info("🔒 로그아웃 요청 수신");
+        log.info("로그아웃 요청 수신");
 
         // 1. 세션 무효화
         HttpSession session = request.getSession(false);
         if (session != null) {
             session.invalidate();
-            log.info("✅ 세션 무효화 완료");
+            log.info("세션 무효화 완료");
         }
 
         // 2. JWT 쿠키 삭제
@@ -74,7 +74,7 @@ public class OAuthUserController {
         refreshTokenCookie.setHttpOnly(true);
         response.addCookie(refreshTokenCookie);
 
-        log.info("✅ JWT 쿠키 삭제 완료");
+        log.info("JWT 쿠키 삭제 완료");
 
         return ResponseEntity.noContent().build(); // 204 No Content
     }
