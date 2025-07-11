@@ -1,5 +1,6 @@
 package io.fundy.fundyserver.register.entity;
 
+import io.fundy.fundyserver.register.entity.oauth.OAuthUser;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -23,8 +24,12 @@ public class Address {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_no", nullable = false)
+    @JoinColumn(name = "user_no")
     private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "oauth_user_id")
+    private OAuthUser oauthUser;
 
     @Column(nullable = false)
     private String name;

@@ -1,12 +1,15 @@
 package io.fundy.fundyserver.register.security.jwt;
 
 import io.fundy.fundyserver.register.entity.RoleType;
+import io.fundy.fundyserver.register.entity.User;
+import io.fundy.fundyserver.register.entity.oauth.OAuthUser;
+import io.fundy.fundyserver.register.security.CustomOAuthUserDetails;
+import io.fundy.fundyserver.register.security.CustomUserDetails;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
-import io.fundy.fundyserver.register.security.jwt.JwtTokenProvider;
 import io.fundy.fundyserver.register.repository.OAuthUserRepository;
 import io.fundy.fundyserver.register.repository.UserRepository;
 import io.fundy.fundyserver.register.exception.ApiException;
@@ -19,6 +22,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -41,10 +45,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.skipPaths = skipPaths;
     }
 
-    // 핵심 : JWT가 없으면 → 401 + "토큰 필요" 리턴
-    //       JWT가 있는데 유효하지 않으면 → 401 + "유효하지 않은 토큰" 리턴
-    //       JWT가 만료되었으면 → 401 + "만료된 토큰" 리턴
-    //       JWT가 정상 → 아무 처리 없이 filterChain.doFilter()로 넘김
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
@@ -63,7 +63,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 sendUnauthorized(response, "Authorization 토큰이 필요합니다.");
                 return;
             }
-            // 만료 or 기타 JWT 예외를 명확하게 구분해서 401 메시지 다르게 처리
             try {
                 if (!tokenProvider.validateToken(token)) {
                     log.warn("[JWT 인증 실패] 토큰 유효성 검증 실패: {}", token);
@@ -74,21 +73,39 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String userId = tokenProvider.getUserId(token);
                 RoleType roleType = tokenProvider.getRole(token);
 
-                // 2. 인증 객체 생성
-                PreAuthenticatedAuthenticationToken authentication =
-                        new PreAuthenticatedAuthenticationToken(
-                                userId,
-                                null,
-                                List.of(new SimpleGrantedAuthority(roleType.name())) // "USER" , "ADMIN"
-                        );
-
-                // 3. SecurityContextHolder에 등록
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                // 2. DB에서 일반 회원(User) 우선 조회
+                Optional<User> userOpt = userRepo.findByEmail(userId);
+                if (userOpt.isPresent()) {
+                    CustomUserDetails userDetails = new CustomUserDetails(userOpt.get());
+                    PreAuthenticatedAuthenticationToken authentication =
+                            new PreAuthenticatedAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                } else {
+                    // 3. 소셜 회원(OAuthUser) 조회
+                    Optional<OAuthUser> oauthUserOpt = oauthUserRepo.findByEmail(userId);
+                    if (oauthUserOpt.isPresent()) {
+                        CustomOAuthUserDetails oauthUserDetails = new CustomOAuthUserDetails(oauthUserOpt.get());
+                        PreAuthenticatedAuthenticationToken authentication =
+                                new PreAuthenticatedAuthenticationToken(
+                                        oauthUserDetails,
+                                        null,
+                                        oauthUserDetails.getAuthorities()
+                                );
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    } else {
+                        log.warn("[JWT 인증 실패] 유저를 찾을 수 없음: {}", userId);
+                        sendUnauthorized(response, "유저를 찾을 수 없습니다.");
+                        return;
+                    }
+                }
 
             } catch (ApiException ex) {
                 if (ex.getErrorCode() == ErrorCode.TOKEN_EXPIRED) {
                     log.warn("[JWT 인증 실패] 토큰 만료: {}", token);
-                    // 순환참조 방지: 여기서 userService 사용하지 않음!
                     sendUnauthorized(response, "만료된 토큰입니다.");
                     return;
                 } else {
@@ -102,7 +119,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    // Authorization 헤더의 Bearer {token}에서 실제 JWT만 추출해서 반환
     private String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
@@ -111,7 +127,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return null;
     }
 
-    // skipPaths에 포함된 경로(예: /api/register/login, /api/register/signup)는 인증 필터 통과(검증 안 함)
     protected boolean shouldNotFilter(HttpServletRequest request) {
         return skipPaths.stream().anyMatch(path -> pathMatcher.match(path, request.getServletPath()));
     }

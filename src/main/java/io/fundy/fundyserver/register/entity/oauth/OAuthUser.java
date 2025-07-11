@@ -30,6 +30,19 @@ public class OAuthUser {
     @Column(name = "registration_id")
     private String registrationId;
 
+    // 프로필 수정을 위한 추가 필드들
+    @Column(name = "nickname")
+    private String nickname;
+
+    @Column(name = "phone")
+    private String phone;
+
+    @Column(name = "address")
+    private String address;
+
+    @Column(name = "address_detail")
+    private String addressDetail;
+
     // 이름, 프로필 이미지 업데이트
     public OAuthUser update(String name, String picture) {
         this.name = name;
@@ -54,5 +67,47 @@ public class OAuthUser {
     // 컴파일 오류 방지용 Getter
     public RoleType getRole() {
         return this.roleType;
+    }
+
+    // 프로필 수정을 위한 Setter 메서드들
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public void setAddressDetail(String addressDetail) {
+        this.addressDetail = addressDetail;
+    }
+
+    // Builder 패턴을 위한 추가 메서드들
+    public OAuthUser withNickname(String nickname) {
+        this.nickname = nickname;
+        return this;
+    }
+
+    public OAuthUser withPhone(String phone) {
+        this.phone = phone;
+        return this;
+    }
+
+    public OAuthUser withAddress(String address) {
+        this.address = address;
+        return this;
+    }
+
+    public OAuthUser withAddressDetail(String addressDetail) {
+        this.addressDetail = addressDetail;
+        return this;
     }
 }
