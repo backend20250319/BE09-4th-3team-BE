@@ -58,7 +58,7 @@ public class ReviewService {
         }
 
         boolean hasPledged = pledges.stream()
-                .anyMatch(pledge -> pledge.getProjectNo().equals(projectNo));
+                .anyMatch(pledge ->pledge.getProject().getProjectNo().equals(projectNo));
 
         if (!hasPledged) {
             throw new ReviewException(ReviewErrorCode.USER_NOT_PARTICIPATED);
@@ -169,7 +169,7 @@ public class ReviewService {
         }
 
         Set<Long> pledgedProjectNos = pledges.stream()
-                .map(MyPledgeResponseDTO::getProjectNo)
+                .map(pledge -> pledge.getProject().getProjectNo())
                 .collect(Collectors.toSet());
 
         List<Project> pledgedProjects = projectRepository.findAllByProjectNoIn(pledgedProjectNos);
@@ -189,19 +189,24 @@ public class ReviewService {
                 .filter(p -> p.getDeadLine() != null && p.getDeadLine().isBefore(LocalDate.now()))
                 .filter(p -> !hasActiveReviewMap.containsKey(p.getProjectNo()))
                 .map(p -> pledges.stream()
-                        .filter(pl -> pl.getProjectNo().equals(p.getProjectNo()))
+                        .filter(pl -> pl.getProject() != null && pl.getProject().getProjectNo().equals(p.getProjectNo()))
                         .findFirst()
-                        .map(pl -> new ReviewWritableProjectDTO(
-                                p.getProjectNo(),
-                                p.getTitle(),
-                                p.getThumbnailUrl(),
-                                pl.getRewardTitle(),
-                                pl.getTotalAmount(),
-                                p.getDeadLine(),
-                                pl.getCreatedAt()   // 여기 추가
-                        ))
-                        .orElse(null)
+                        .map(pl -> {
+                            String rewardTitle = pl.getRewards() != null && !pl.getRewards().isEmpty()
+                                    ? pl.getRewards().get(0).getRewardTitle()
+                                    : null;
 
+                            return new ReviewWritableProjectDTO(
+                                    p.getProjectNo(),
+                                    p.getTitle(),
+                                    p.getThumbnailUrl(),
+                                    rewardTitle,
+                                    pl.getTotalAmount(),
+                                    p.getDeadLine(),
+                                    pl.getCreatedAt()
+                            );
+                        })
+                        .orElse(null)
                 )
                 .filter(Objects::nonNull)
                 .toList();
