@@ -164,6 +164,23 @@ public class ReviewService {
     // 후원했지만 아직 리뷰 안 쓴, 성공 마감된 프로젝트 목록 조회
     public List<ReviewWritableProjectDTO> getWritableProjects(String userId) {
         final List<MyPledgeResponseDTO> pledges = getPledgesSafely(userId);
+
+
+
+        for (MyPledgeResponseDTO pl : pledges) {
+            System.out.println("Pledge projectNo: " + (pl.getProject() != null ? pl.getProject().getProjectNo() : "null"));
+            System.out.println("Rewards:");
+            if (pl.getRewards() != null) {
+                pl.getRewards().forEach(r -> System.out.println(" - " + r.getRewardTitle() + " x " + r.getQuantity()));
+            } else {
+                System.out.println(" - No rewards");
+            }
+        }
+
+
+
+
+
         if (pledges.isEmpty()) {
             return Collections.emptyList();
         }
@@ -174,7 +191,6 @@ public class ReviewService {
 
         List<Project> pledgedProjects = projectRepository.findAllByProjectNoIn(pledgedProjectNos);
 
-        // 리뷰를 이미 작성한 프로젝트를 필터링하기 위한 map
         Map<Long, Boolean> hasActiveReviewMap = reviewRepository.findByUser_UserId(userId)
                 .stream()
                 .collect(Collectors.toMap(
@@ -183,7 +199,6 @@ public class ReviewService {
                         (a, b) -> a
                 ));
 
-        // DTO로 변환
         return pledgedProjects.stream()
                 .filter(p -> p.getCurrentAmount() >= p.getGoalAmount())
                 .filter(p -> p.getDeadLine() != null && p.getDeadLine().isBefore(LocalDate.now()))
@@ -192,18 +207,25 @@ public class ReviewService {
                         .filter(pl -> pl.getProject() != null && pl.getProject().getProjectNo().equals(p.getProjectNo()))
                         .findFirst()
                         .map(pl -> {
-                            String rewardTitle = pl.getRewards() != null && !pl.getRewards().isEmpty()
-                                    ? pl.getRewards().get(0).getRewardTitle()
-                                    : null;
+                            String rewardSummary = (pl.getRewards() != null && !pl.getRewards().isEmpty())
+                                    ? pl.getRewards().stream()
+                                    .map(r -> r.getRewardTitle() + " x " + r.getQuantity())
+                                    .collect(Collectors.joining(", "))
+                                    : "";
+
+                            LocalDate pledgedDate = null;
+                            if (pl.getCreatedAt() != null) {
+                                pledgedDate = pl.getCreatedAt().toLocalDate();
+                            }
 
                             return new ReviewWritableProjectDTO(
                                     p.getProjectNo(),
                                     p.getTitle(),
                                     p.getThumbnailUrl(),
-                                    rewardTitle,
+                                    rewardSummary,
                                     pl.getTotalAmount(),
                                     p.getDeadLine(),
-                                    pl.getCreatedAt()
+                                    pledgedDate
                             );
                         })
                         .orElse(null)
