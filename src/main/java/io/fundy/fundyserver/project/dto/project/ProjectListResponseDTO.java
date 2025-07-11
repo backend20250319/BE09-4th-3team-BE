@@ -19,5 +19,6 @@ public class ProjectListResponseDTO {
     private String deadLine;
     private String categoryName;
     private String status;
+    private String creatorName;
     private int percent;
 }

@@ -86,6 +86,7 @@ public class ProjectService {
                         p.getDeadLine().toString(),
                         p.getCategory().getName(),
                         p.getProductStatus().name(),
+                        p.getCreatorName(),
                         calculatePercent(p)
                 )).toList();
 
