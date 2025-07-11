@@ -5,6 +5,7 @@ import io.fundy.fundyserver.pledge.dto.PledgeRequestDTO;
 import io.fundy.fundyserver.pledge.dto.PledgeResponseDTO;
 import io.fundy.fundyserver.pledge.entity.Pledge;
 import io.fundy.fundyserver.pledge.repository.PledgeRepository;
+import io.fundy.fundyserver.project.dto.project.ProjectDetailResponseDTO;
 import io.fundy.fundyserver.project.entity.Project;
 import io.fundy.fundyserver.project.entity.ProjectStatus;
 import io.fundy.fundyserver.project.entity.Reward;
@@ -45,35 +46,50 @@ public class PledgeService {
         Project project = projectRepository.findById(dto.getProjectNo())
                 .orElseThrow(() -> new ApiException(ErrorCode.PROJECT_NOT_FOUND));
 
-        Reward reward = rewardRepository.findById(dto.getRewardNo())
-                .orElseThrow(() -> new ApiException(ErrorCode.REWARD_NOT_FOUND));
-
-        // 프로젝트와 리워드의 연관관계 확인
-        if (!reward.getProject().getProjectNo().equals(project.getProjectNo())) {
-            throw new ApiException(ErrorCode.REWARD_NOT_MATCHED);
-        }
-
         // 프로젝트 상태 확인 (진행 중인 프로젝트만 후원 가능)
         if (project.getProductStatus() != ProjectStatus.IN_PROGRESS && 
             project.getProductStatus() != ProjectStatus.APPROVED) {
             throw new ApiException(ErrorCode.PROJECT_NOT_AVAILABLE);
         }
 
-        // 리워드 재고 확인 (재고가 있거나, 무제한(-1)인 경우만 가능)
-        if (reward.getStock() != null && reward.getStock() != -1 && reward.getStock() <= 0) {
-            throw new ApiException(ErrorCode.REWARD_OUT_OF_STOCK);
-        }
-
         // 후원 엔티티 생성
         Pledge pledge = Pledge.create(
             user, 
             project, 
-            reward, 
             dto.getAdditionalAmount(),
             dto.getDeliveryAddress(),
             dto.getDeliveryPhone(),
             dto.getRecipientName()
         );
+
+        // 선택한 리워드 검증 및 추가
+        for (PledgeRequestDTO.PledgeRewardDTO rewardDto : dto.getRewards()) {
+            Reward reward = rewardRepository.findById(rewardDto.getRewardNo())
+                    .orElseThrow(() -> new ApiException(ErrorCode.REWARD_NOT_FOUND));
+
+            // 프로젝트와 리워드의 연관관계 확인
+            if (!reward.getProject().getProjectNo().equals(project.getProjectNo())) {
+                throw new ApiException(ErrorCode.REWARD_NOT_MATCHED);
+            }
+
+            // 리워드 재고 확인 (재고가 있거나, 무제한(-1)인 경우만 가능)
+            if (reward.getStock() != null && reward.getStock() != -1 && 
+                reward.getStock() < rewardDto.getQuantity()) {
+                throw new ApiException(ErrorCode.REWARD_OUT_OF_STOCK);
+            }
+
+            // 리워드 추가
+            pledge.addReward(reward, rewardDto.getQuantity());
+
+            // 리워드 재고 업데이트 (무제한이 아닌 경우)
+            if (reward.getStock() != null && reward.getStock() != -1) {
+                // 재고 감소 로직은 Reward 클래스에 메서드가 없어 수동 계산
+                // 실제 구현 시 Reward 클래스에 decreaseStock 메서드를 추가하는 것이 좋습니다
+            }
+        }
+
+        // 총 금액 계산
+        pledge.calculateTotalAmount();
 
         // 후원 정보 저장
         Pledge savedPledge = pledgeRepository.save(pledge);
@@ -81,22 +97,27 @@ public class PledgeService {
         // 프로젝트 후원 금액 업데이트
         project.setCurrentAmount(project.getCurrentAmount() + pledge.getTotalAmount());
 
-        // 리워드 재고 업데이트 (무제한이 아닌 경우)
-        if (reward.getStock() != null && reward.getStock() != -1) {
-            // 재고 감소 로직은 Reward 클래스에 메서드가 없어 수동 계산
-            // 실제 구현 시 Reward 클래스에 decreaseStock 메서드를 추가하는 것이 좋습니다
-        }
-
         // 목표 금액 달성 시 상태 업데이트
         updateProjectStatus(project);
+
+        // 리워드 정보 DTO 변환
+        List<PledgeResponseDTO.PledgeRewardInfoDTO> rewardInfos = savedPledge.getPledgeRewards().stream()
+            .map(pr -> new PledgeResponseDTO.PledgeRewardInfoDTO(
+                pr.getReward().getRewardNo(),
+                pr.getRewardTitle(),
+                pr.getRewardAmount(),
+                pr.getQuantity()
+            ))
+            .collect(Collectors.toList());
 
         // 응답 DTO 생성 및 반환
         return new PledgeResponseDTO(
             savedPledge.getPledgeNo(),
             project.getProjectNo(),
             project.getTitle(),
-            reward.getTitle(),
-            pledge.getTotalAmount()
+            rewardInfos,
+            savedPledge.getAdditionalAmount(),
+            savedPledge.getTotalAmount()
         );
     }
 
@@ -113,17 +134,31 @@ public class PledgeService {
         List<Pledge> pledges = pledgeRepository.findByUser(user);
 
         return pledges.stream()
-                .map(pledge -> new MyPledgeResponseDTO(
-                    pledge.getPledgeNo(),
-                    pledge.getProject().getProjectNo(),
-                    pledge.getProject().getTitle(),
-                    pledge.getReward().getTitle(),
-                    pledge.getTotalAmount(),
-                    pledge.getDeliveryAddress(),
-                    pledge.getDeliveryPhone(),
-                    pledge.getRecipientName(),
-                    pledge.getCreatedAt()
-                ))
+                .map(pledge -> {
+                    // 리워드 정보 DTO 변환
+                    List<MyPledgeResponseDTO.PledgeRewardInfoDTO> rewardInfos = pledge.getPledgeRewards().stream()
+                        .map(pr -> new MyPledgeResponseDTO.PledgeRewardInfoDTO(
+                            pr.getReward().getRewardNo(),
+                            pr.getRewardTitle(),
+                            pr.getRewardAmount(),
+                            pr.getQuantity()
+                        ))
+                        .collect(Collectors.toList());
+
+                    return new MyPledgeResponseDTO(
+                        pledge.getPledgeNo(),
+                        projectRepository.findById(pledge.getProject().getProjectNo())
+                            .map(project -> ProjectDetailResponseDTO.from(project))
+                            .orElseThrow(() -> new ApiException(ErrorCode.PROJECT_NOT_FOUND)),
+                        rewardInfos,
+                        pledge.getAdditionalAmount(),
+                        pledge.getTotalAmount(),
+                        pledge.getDeliveryAddress(),
+                        pledge.getDeliveryPhone(),
+                        pledge.getRecipientName(),
+                        pledge.getCreatedAt()
+                    );
+                })
                 .collect(Collectors.toList());
     }
 
@@ -162,11 +197,26 @@ public class PledgeService {
             throw new ApiException(ErrorCode.UNAUTHORIZED);
         }
 
+        // ProjectService를 통해 프로젝트 상세 정보 가져오기
+        ProjectDetailResponseDTO projectDetail = projectRepository.findById(pledge.getProject().getProjectNo())
+                .map(project -> ProjectDetailResponseDTO.from(project))
+                .orElseThrow(() -> new ApiException(ErrorCode.PROJECT_NOT_FOUND));
+
+        // 리워드 정보 DTO 변환
+        List<MyPledgeResponseDTO.PledgeRewardInfoDTO> rewardInfos = pledge.getPledgeRewards().stream()
+            .map(pr -> new MyPledgeResponseDTO.PledgeRewardInfoDTO(
+                pr.getReward().getRewardNo(),
+                pr.getRewardTitle(),
+                pr.getRewardAmount(),
+                pr.getQuantity()
+            ))
+            .collect(Collectors.toList());
+
         return new MyPledgeResponseDTO(
                 pledge.getPledgeNo(),
-                pledge.getProject().getProjectNo(),
-                pledge.getProject().getTitle(),
-                pledge.getReward().getTitle(),
+                projectDetail,
+                rewardInfos,
+                pledge.getAdditionalAmount(),
                 pledge.getTotalAmount(),
                 pledge.getDeliveryAddress(),
                 pledge.getDeliveryPhone(),

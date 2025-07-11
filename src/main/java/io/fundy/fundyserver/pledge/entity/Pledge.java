@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "pledges")
@@ -27,9 +29,8 @@ public class Pledge {
     @JoinColumn(name = "project_no", nullable = false)
     private Project project; // 후원한 프로젝트
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reward_no", nullable = false)
-    private Reward reward; // 선택한 리워드
+    @OneToMany(mappedBy = "pledge", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PledgeReward> pledgeRewards = new ArrayList<>(); // 선택한 리워드 목록
 
     @Column(name = "additional_amount")
     private Integer additionalAmount = 0; // 추가 후원금
@@ -54,14 +55,26 @@ public class Pledge {
         createdAt = LocalDateTime.now();
     }
 
-    public static Pledge create(User user, Project project, Reward reward, Integer additionalAmount, 
+    // 리워드 추가 메서드
+    public void addReward(Reward reward, Integer quantity) {
+        PledgeReward pledgeReward = PledgeReward.create(this, reward, quantity);
+        this.pledgeRewards.add(pledgeReward);
+    }
+
+    // 총 금액 계산 메서드
+    public void calculateTotalAmount() {
+        int rewardsTotal = this.pledgeRewards.stream()
+                .mapToInt(pr -> pr.getRewardAmount() * pr.getQuantity())
+                .sum();
+        this.totalAmount = rewardsTotal + (this.additionalAmount != null ? this.additionalAmount : 0);
+    }
+
+    public static Pledge create(User user, Project project, Integer additionalAmount, 
                                String deliveryAddress, String deliveryPhone, String recipientName) {
         Pledge pledge = new Pledge();
         pledge.user = user;
         pledge.project = project;
-        pledge.reward = reward;
         pledge.additionalAmount = additionalAmount != null ? additionalAmount : 0;
-        pledge.totalAmount = reward.getAmount() + pledge.additionalAmount;
         pledge.deliveryAddress = deliveryAddress;
         pledge.deliveryPhone = deliveryPhone;
         pledge.recipientName = recipientName;
