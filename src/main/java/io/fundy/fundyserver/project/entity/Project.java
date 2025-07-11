@@ -110,8 +110,6 @@ public class Project {
         project.viewCount = 0;
         project.createdAt = LocalDateTime.now();
         project.updatedAt = LocalDateTime.now();
-
-        // ✅ 누락된 필드 추가
         project.creatorName = dto.getCreatorName();
         project.creatorInfo = dto.getCreatorInfo();
         project.thumbnailUrl = dto.getThumbnailUrl();

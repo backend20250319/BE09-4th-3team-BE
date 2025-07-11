@@ -4,6 +4,7 @@ import io.fundy.fundyserver.project.dto.project.*;
 import io.fundy.fundyserver.project.dto.reward.RewardRequestDTO;
 import io.fundy.fundyserver.project.entity.Category;
 import io.fundy.fundyserver.project.entity.Project;
+import io.fundy.fundyserver.project.entity.ProjectStatus;
 import io.fundy.fundyserver.project.entity.Reward;
 import io.fundy.fundyserver.project.exception.ApiException;
 import io.fundy.fundyserver.project.exception.ErrorCode;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -58,12 +60,10 @@ public class ProjectService {
 
     /***
      * 프로젝트 목록 조회
-     * @param page
-     * @param size
-     * @return
      */
     public ProjectListPageResponseDTO getProjects(Pageable pageable) {
-        Page<Project> projectPage = projectRepository.findAll(pageable);
+        LocalDate today = LocalDate.now();
+        Page<Project> projectPage = projectRepository.findByProductStatusAndDeadLineAfter(ProjectStatus.APPROVED, today, pageable);
 
         List<ProjectListResponseDTO> dtoList = projectPage.stream()
                 .map(p -> new ProjectListResponseDTO(
