@@ -63,7 +63,14 @@ public class ProjectService {
      */
     public ProjectListPageResponseDTO getProjects(Pageable pageable) {
         LocalDate today = LocalDate.now();
-        Page<Project> projectPage = projectRepository.findByProductStatusAndDeadLineAfter(ProjectStatus.APPROVED, today, pageable);
+
+        Page<Project> projectPage = projectRepository.findByProductStatusAndDeadLineAfter(
+                ProjectStatus.APPROVED, today, pageable
+        );
+
+        long approvedCount = projectRepository.countByProductStatusAndDeadLineAfter(
+                ProjectStatus.APPROVED, today
+        );
 
         List<ProjectListResponseDTO> dtoList = projectPage.stream()
                 .map(p -> new ProjectListResponseDTO(
@@ -85,8 +92,9 @@ public class ProjectService {
                 projectPage.getTotalElements()
         );
 
-        return new ProjectListPageResponseDTO(dtoList, pagination);
+        return new ProjectListPageResponseDTO(dtoList, pagination, approvedCount);
     }
+
 
 
     private int calculatePercent(Project project) {

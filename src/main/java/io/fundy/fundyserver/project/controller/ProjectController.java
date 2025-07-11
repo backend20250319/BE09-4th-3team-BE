@@ -58,7 +58,8 @@ public class ProjectController {
                 Map.of(
                         "success", true,
                         "data", response.getData(),
-                        "pagination", response.getPagination()
+                        "pagination", response.getPagination(),
+                        "approvedCount", response.getApprovedCount()
                 )
         );
     }
