@@ -14,6 +14,7 @@ import java.util.List;
 public class ProjectListPageResponseDTO {
     private List<ProjectListResponseDTO> data;
     private PaginationDTO pagination;
+    private long approvedCount;
 
     @Getter
     @Setter

@@ -20,13 +20,19 @@ public class ProjectDetailResponseDTO {
     private Integer currentAmount;
     private String startLine;
     private String deadline;
+    private String categoryName;
     private String creatorName;
     private String creatorInfo;
     private String status;
     private String thumbnailUrl;
+    private Integer percentFunded;
     private List<RewardDTO> rewards;
 
     public static ProjectDetailResponseDTO from(Project project) {
+        int goal = project.getGoalAmount();
+        int current = project.getCurrentAmount();
+        int percent = goal > 0 ? (int) Math.round((double) current / goal * 100) : 0;
+
         return new ProjectDetailResponseDTO(
                 project.getProjectNo(),
                 project.getTitle(),
@@ -36,10 +42,12 @@ public class ProjectDetailResponseDTO {
                 project.getCurrentAmount(),
                 project.getStartLine().toString(),
                 project.getDeadLine().toString(),
+                project.getCategory().getName(),
+                project.getCreatorName(),
+                project.getCreatorInfo(),
                 project.getProductStatus().name(),
-                project.getCreatorName(),
-                project.getCreatorName(),
                 project.getThumbnailUrl(),
+                percent,
                 project.getRewards().stream()
                         .map(RewardDTO::from)
                         .collect(Collectors.toList())

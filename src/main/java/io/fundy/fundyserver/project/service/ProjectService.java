@@ -4,6 +4,7 @@ import io.fundy.fundyserver.project.dto.project.*;
 import io.fundy.fundyserver.project.dto.reward.RewardRequestDTO;
 import io.fundy.fundyserver.project.entity.Category;
 import io.fundy.fundyserver.project.entity.Project;
+import io.fundy.fundyserver.project.entity.ProjectStatus;
 import io.fundy.fundyserver.project.entity.Reward;
 import io.fundy.fundyserver.project.exception.ApiException;
 import io.fundy.fundyserver.project.exception.ErrorCode;
@@ -15,9 +16,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -57,17 +60,20 @@ public class ProjectService {
 
     /***
      * 프로젝트 목록 조회
-     * @param page
-     * @param size
-     * @return
      */
-    public ProjectListPageResponseDTO getProjects(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Project> projectPage = projectRepository.findAll(pageable);
+    public ProjectListPageResponseDTO getProjects(Pageable pageable) {
+        LocalDate today = LocalDate.now();
 
-        System.out.println("총 프로젝트 수: " + projectPage.getTotalElements());
-        System.out.println("조회된 프로젝트: " + projectPage.getContent().size());
-        projectPage.getContent().forEach(p -> System.out.println(p.getTitle()));
+        // ✅ APPROVED + IN_PROGRESS 상태 프로젝트 조회
+        List<ProjectStatus> statusList = List.of(ProjectStatus.APPROVED, ProjectStatus.IN_PROGRESS);
+
+        Page<Project> projectPage = projectRepository.findByProductStatusInAndDeadLineGreaterThanEqual(
+                statusList, today, pageable
+        );
+
+        long approvedCount = projectRepository.countByProductStatusInAndDeadLineGreaterThanEqual(
+                statusList, today
+        );
 
         List<ProjectListResponseDTO> dtoList = projectPage.stream()
                 .map(p -> new ProjectListResponseDTO(
@@ -79,6 +85,8 @@ public class ProjectService {
                         p.getStartLine().toString(),
                         p.getDeadLine().toString(),
                         p.getCategory().getName(),
+                        p.getProductStatus().name(),
+                        p.getCreatorName(),
                         calculatePercent(p)
                 )).toList();
 
@@ -89,9 +97,45 @@ public class ProjectService {
                 projectPage.getTotalElements()
         );
 
-        return new ProjectListPageResponseDTO(dtoList, pagination);
+        return new ProjectListPageResponseDTO(dtoList, pagination, approvedCount);
     }
 
+    @Transactional
+    public void updateProjectStatusesByStartLine() {
+        LocalDate today = LocalDate.now();
+        List<Project> approvedProjects = projectRepository
+                .findByProductStatusAndStartLineLessThanEqual(ProjectStatus.APPROVED, today);
+
+        for (Project p : approvedProjects) {
+            p.setProductStatus(ProjectStatus.IN_PROGRESS);
+        }
+        projectRepository.saveAll(approvedProjects);
+    }
+
+    @Transactional
+    public void updateProjectStatusesAfterDeadline() {
+        LocalDate today = LocalDate.now();
+        List<Project> expiredProjects = projectRepository
+                .findByProductStatusInAndDeadLineBefore(
+                        List.of(ProjectStatus.APPROVED, ProjectStatus.IN_PROGRESS), today
+                );
+
+        for (Project p : expiredProjects) {
+            if (p.getCurrentAmount() >= p.getGoalAmount()) {
+                p.setProductStatus(ProjectStatus.COMPLETED);
+            } else {
+                p.setProductStatus(ProjectStatus.FAILED);
+            }
+        }
+        projectRepository.saveAll(expiredProjects);
+    }
+
+
+    /***
+     * 프로젝트 (목표금액 / 모인금액) 퍼센티지 계산
+     * @param project
+     * @return
+     */
     private int calculatePercent(Project project) {
         if (project.getGoalAmount() == 0) return 0;
         return (int) ((project.getCurrentAmount() / (double) project.getGoalAmount()) * 100);
