@@ -20,21 +20,22 @@ public class AdminProjectService {
     /**
      * 전체 프로젝트를 페이징 조회 (관리자용)
      * @param page 페이지 번호 (0부터 시작)
-     * @param categoryNo 카테고리 번호 (선택)
+     * @param productStatus 프로젝트 상태 (선택)
      * @return AdminProjectResponseDto 페이지
      */
-    public Page<AdminProjectResponseDto> getAllProjects(int page, Long categoryNo) {
+    public Page<AdminProjectResponseDto> getAllProjects(int page, ProjectStatus productStatus) {
         Pageable pageable = PageRequest.of(page, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Project> projects;
 
-        if (categoryNo != null) {
-            projects = projectRepository.findByCategory_CategoryNo(categoryNo, pageable);
+        if (productStatus != null) {
+            projects = projectRepository.findByProductStatus(productStatus, pageable);
         } else {
             projects = projectRepository.findAll(pageable);
         }
 
         return projects.map(AdminProjectResponseDto::fromEntity);
     }
+
 
     /**
      * 프로젝트 상태 변경 (승인 또는 거절)
