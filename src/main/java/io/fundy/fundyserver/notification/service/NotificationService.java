@@ -136,7 +136,8 @@ public class NotificationService {
                 n.getMessage(),
                 n.getIsRead(),
                 n.getCreatedAt(),
-                n.getUser().getNickname()
+                n.getProject().getCreatorName(),
+                n.getProject().getThumbnailUrl()
         ));
     }
 

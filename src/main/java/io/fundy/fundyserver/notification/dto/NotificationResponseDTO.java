@@ -19,5 +19,6 @@ public class NotificationResponseDTO {
     private String message;
     private Boolean isRead;
     private LocalDateTime createdAt;
-    private String nickname;
+    private String creatorName;
+    private String projectThumbnailUrl;
 }

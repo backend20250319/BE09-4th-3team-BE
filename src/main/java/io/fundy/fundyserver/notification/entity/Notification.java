@@ -29,6 +29,9 @@ public class Notification {
     @JoinColumn(name = "project_no", nullable = false)
     private Project project;
 
+    @Column(name = "creator_name")
+    private String creatorName;
+
     @Column(name = "type", length = 50, nullable = false)
     private String type;
 
@@ -64,4 +67,5 @@ public class Notification {
     public void markAsDeleted() {
         this.isDeleted = true;
     }
+
 }
