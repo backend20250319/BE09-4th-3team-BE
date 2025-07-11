@@ -20,7 +20,7 @@ public class ReviewResponseDTO {
     private int planStatus;
     private int commStatus;
     private String content;
-    private String imageUrl;
+    private String projectThumbnailUrl;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

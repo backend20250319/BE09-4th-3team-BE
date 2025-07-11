@@ -3,6 +3,7 @@ package io.fundy.fundyserver.review.service;
 import io.fundy.fundyserver.pledge.dto.MyPledgeResponseDTO;
 import io.fundy.fundyserver.pledge.service.PledgeService;
 import io.fundy.fundyserver.project.entity.Project;
+import io.fundy.fundyserver.project.entity.Reward;
 import io.fundy.fundyserver.project.repository.ProjectRepository;
 import io.fundy.fundyserver.register.entity.RoleType;
 import io.fundy.fundyserver.register.entity.User;
@@ -162,13 +163,8 @@ public class ReviewService {
 
     // 후원했지만 아직 리뷰 안 쓴, 성공 마감된 프로젝트 목록 조회
     public List<ReviewWritableProjectDTO> getWritableProjects(String userId) {
-        List<MyPledgeResponseDTO> pledges;
-        try {
-            pledges = pledgeService.getMyPledges(userId);
-            if (pledges == null) {
-                pledges = Collections.emptyList();
-            }
-        } catch (Exception e) {
+        final List<MyPledgeResponseDTO> pledges = getPledgesSafely(userId);
+        if (pledges.isEmpty()) {
             return Collections.emptyList();
         }
 
@@ -178,6 +174,7 @@ public class ReviewService {
 
         List<Project> pledgedProjects = projectRepository.findAllByProjectNoIn(pledgedProjectNos);
 
+        // 리뷰를 이미 작성한 프로젝트를 필터링하기 위한 map
         Map<Long, Boolean> hasActiveReviewMap = reviewRepository.findByUser_UserId(userId)
                 .stream()
                 .collect(Collectors.toMap(
@@ -186,19 +183,37 @@ public class ReviewService {
                         (a, b) -> a
                 ));
 
+        // DTO로 변환
         return pledgedProjects.stream()
                 .filter(p -> p.getCurrentAmount() >= p.getGoalAmount())
                 .filter(p -> p.getDeadLine() != null && p.getDeadLine().isBefore(LocalDate.now()))
                 .filter(p -> !hasActiveReviewMap.containsKey(p.getProjectNo()))
-                .map(p -> new ReviewWritableProjectDTO(
-                        p.getProjectNo(),
-                        p.getTitle(),
-                        p.getThumbnailUrl(),
-                        "",
-                        "",
-                        p.getDeadLine()
-                ))
+                .map(p -> pledges.stream()
+                        .filter(pl -> pl.getProjectNo().equals(p.getProjectNo()))
+                        .findFirst()
+                        .map(pl -> new ReviewWritableProjectDTO(
+                                p.getProjectNo(),
+                                p.getTitle(),
+                                p.getThumbnailUrl(),
+                                pl.getRewardTitle(),
+                                pl.getTotalAmount(),
+                                p.getDeadLine(),
+                                pl.getCreatedAt()   // 여기 추가
+                        ))
+                        .orElse(null)
+
+                )
+                .filter(Objects::nonNull)
                 .toList();
+    }
+
+    private List<MyPledgeResponseDTO> getPledgesSafely(String userId) {
+        try {
+            List<MyPledgeResponseDTO> pledges = pledgeService.getMyPledges(userId);
+            return pledges != null ? pledges : Collections.emptyList();
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
     }
 
     public List<ReviewResponseDTO> getWrittenReviews(String userId) {
@@ -212,16 +227,18 @@ public class ReviewService {
     }
 
     private ReviewResponseDTO toDTO(Review review) {
+        Project project = review.getProject();
+
         return new ReviewResponseDTO(
                 review.getReviewNo(),
-                review.getProject() != null ? review.getProject().getProjectNo() : null,
-                review.getProject() != null ? review.getProject().getTitle() : null,
+                project != null ? project.getProjectNo() : null,
+                project != null ? project.getTitle() : null,
                 review.getUser() != null ? review.getUser().getNickname() : null,
                 review.getRewardStatus(),
                 review.getPlanStatus(),
                 review.getCommStatus(),
                 review.getContent(),
-                review.getImageUrl(),
+                project != null ? project.getThumbnailUrl() : null,
                 review.getCreatedAt(),
                 review.getUpdatedAt()
         );

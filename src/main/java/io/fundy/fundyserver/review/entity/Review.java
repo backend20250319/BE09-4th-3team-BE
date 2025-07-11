@@ -1,6 +1,7 @@
 package io.fundy.fundyserver.review.entity;
 
 import io.fundy.fundyserver.project.entity.Project;
+import io.fundy.fundyserver.project.entity.Reward;
 import io.fundy.fundyserver.register.entity.User;
 
 import jakarta.persistence.*;
@@ -29,6 +30,10 @@ public class Review {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reward_no")
+    private Reward reward;
 
     @Column(name = "reward_status", nullable = false)
     private int rewardStatus;
