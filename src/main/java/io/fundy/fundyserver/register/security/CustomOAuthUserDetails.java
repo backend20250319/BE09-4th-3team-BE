@@ -53,6 +53,6 @@ public class CustomOAuthUserDetails implements UserDetails {
     }
 
     public OAuthUser getOAuthUser() {
-        return this.oauthUser; // ❗ 누락된 return 문 추가
+        return this.oauthUser; // 누락된 return 문 추가
     }
 }

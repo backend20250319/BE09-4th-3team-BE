@@ -9,7 +9,7 @@ public class EmailVerificationResult {
     private boolean success;
     private String message;
 
-    // ✅ of 메서드 추가
+    // 이메일 인증 관련 DTO
     public static EmailVerificationResult of(boolean authResult) {
         if (authResult) {
             return new EmailVerificationResult(true, "인증 성공");

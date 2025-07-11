@@ -14,12 +14,13 @@ import java.time.LocalDateTime;
 public class ReviewResponseDTO {
     private Long reviewNo;
     private Long projectNo;
+    private String projectTitle;
     private String userNickname;
     private int rewardStatus;
     private int planStatus;
     private int commStatus;
     private String content;
-    private String imageUrl;
+    private String projectThumbnailUrl;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

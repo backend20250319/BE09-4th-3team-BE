@@ -29,7 +29,7 @@ public class OAuthUserService {
             user = userOptional.get().update(oAuthAttributes.getName(), oAuthAttributes.getPicture());
         } else {
             user = oAuthAttributes.toEntity();
-            user.setRoleType(RoleType.USER); // ✅ 기본 권한 설정
+            user.setRoleType(RoleType.USER); // 기본 권한 설정
         }
 
         OAuthUser savedUser = userRepository.save(user);
