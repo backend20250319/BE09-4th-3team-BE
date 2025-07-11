@@ -27,7 +27,10 @@ public enum ErrorCode {
     // 리워드 관련 오류
     REWARD_NOT_FOUND(HttpStatus.NOT_FOUND, "리워드를 찾을 수 없습니다."),
     REWARD_NOT_MATCHED(HttpStatus.BAD_REQUEST, "리워드가 해당 프로젝트에 속하지 않습니다."),
-    REWARD_OUT_OF_STOCK(HttpStatus.BAD_REQUEST, "해당 리워드는 품절되었습니다.");
+    REWARD_OUT_OF_STOCK(HttpStatus.BAD_REQUEST, "해당 리워드는 품절되었습니다."),
+
+    // 후원 관련 오류
+    PLEDGE_NOT_FOUND(HttpStatus.NOT_FOUND, "후원 내역을 찾을 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String message;

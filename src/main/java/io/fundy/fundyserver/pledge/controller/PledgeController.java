@@ -45,4 +45,31 @@ public class PledgeController {
         List<MyPledgeResponseDTO> myPledges = pledgeService.getMyPledges(userId);
         return ResponseEntity.ok(myPledges);
     }
+
+    /**
+     * 후원 ID로 사용자 본인의 후원 상세정보 조회
+     * @param pledgeId 후원 ID
+     * @param userId 인증된 사용자 ID
+     * @return 후원 상세정보
+     */
+    @GetMapping("/{pledgeId}")
+    public ResponseEntity<MyPledgeResponseDTO> getMyPledgeById(
+            @PathVariable Long pledgeId,
+            @AuthenticationPrincipal String userId) {
+        MyPledgeResponseDTO response = pledgeService.getMyPledgeById(pledgeId, userId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 후원 ID로 해당 후원이 프로젝트의 몇 번째 후원인지 조회
+     * @param pledgeId 후원 ID
+     * @return 해당 후원의 프로젝트 내 순번
+     */
+    @GetMapping("/{pledgeId}/order")
+    public ResponseEntity<Integer> getPledgeOrderInProject(
+            @PathVariable Long pledgeId,
+            @AuthenticationPrincipal String userId) {
+        Integer order = pledgeService.getPledgeOrderInProject(pledgeId, userId);
+        return ResponseEntity.ok(order);
+    }
 }
