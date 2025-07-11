@@ -13,7 +13,7 @@ public class ProjectStatusScheduler {
 
     private final ProjectService projectService;
 
-    @Scheduled(cron = "*/10 * * * * *") // ✅ 10초마다 실행
+    @Scheduled(cron = "0 0 0 * * ?") // 매일 자정 실행
     public void updateProjectStatuses() {
         log.info("🔄 상태 업데이트 시작");
         projectService.updateProjectStatusesByStartLine();       // APPROVED → IN_PROGRESS
