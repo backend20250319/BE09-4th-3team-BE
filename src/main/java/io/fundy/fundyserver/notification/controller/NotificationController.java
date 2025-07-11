@@ -5,6 +5,8 @@ import io.fundy.fundyserver.notification.dto.NotificationRequestDTO;
 import io.fundy.fundyserver.notification.dto.NotificationResponseDTO;
 import io.fundy.fundyserver.notification.dto.NotificationSendRequestDTO;
 import io.fundy.fundyserver.notification.service.NotificationService;
+import io.fundy.fundyserver.register.entity.User;
+import io.fundy.fundyserver.register.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 public class NotificationController {
 
     private final NotificationService notificationService;
+    private final UserRepository userRepository;
 
 
     /**
@@ -31,7 +34,12 @@ public class NotificationController {
             @RequestBody NotificationSendRequestDTO dto,
             @AuthenticationPrincipal String userId
     ) {
-        notificationService.sendSupportComplete(userId, dto.getProjectNo(), dto.getProjectTitle());
+        // 후원자 닉네임 조회 (userService 또는 userRepository에서 직접 조회)
+        String supporterName = userRepository.findByUserId(userId)
+                .map(User::getNickname)
+                .orElse("알 수 없는 사용자");
+
+        notificationService.sendSupportComplete(userId, dto.getProjectNo(), dto.getProjectTitle(), supporterName);
         return ResponseEntity.ok("후원 완료 알림이 성공적으로 전송되었습니다.");
     }
 

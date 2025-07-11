@@ -45,10 +45,19 @@ public class NotificationService {
     }
 
     // 후원 완료 알림 발송
-    public void sendSupportComplete(String userId, Long projectNo, String projectTitle) {
-        validateProjectAndParticipation(userId, projectNo);
-        String message = projectTitle + " 프로젝트에 후원이 완료되었습니다.";
-        sendToQueue("후원 완료", message, userId, projectNo);
+    public void sendSupportComplete(String userId, Long projectNo, String projectTitle, String supporterName) {
+        Project project = validateProjectAndParticipation(userId, projectNo);
+
+        // 후원자에게 알림 메시지
+        String supporterMessage = projectTitle + " 프로젝트에 후원이 완료되었습니다.";
+        sendToQueue("후원 완료", supporterMessage, userId, projectNo);
+
+        // 창작자에게 알림 메시지 (중복 방지)
+        String creatorId = project.getUser().getUserId();
+        if (!creatorId.equals(userId)) {
+            String creatorMessage = supporterName + " 님이 " + projectTitle + " 프로젝트에 후원하였습니다.";
+            sendToQueue("후원 완료", creatorMessage, creatorId, projectNo);
+        }
     }
 
     // 프로젝트 성공 마감 알림 발송
@@ -63,8 +72,13 @@ public class NotificationService {
             throw new IllegalStateException("목표 금액이 채워지지 않았습니다.");
         }
 
-        String message = projectTitle + " 프로젝트가 성공적으로 종료되었습니다!";
+        String message = "등록한 " + projectTitle + " 프로젝트가 성공적으로 종료되었습니다!";
         sendToQueue("프로젝트 마감 (성공)", message, userId, projectNo);
+
+        String creatorId = project.getUser().getUserId();
+        if (!creatorId.equals(userId)) {
+            sendToQueue("프로젝트 마감 (성공)", message, creatorId, projectNo);
+        }
     }
 
     // 프로젝트 실패 마감 알림 발송
@@ -79,8 +93,13 @@ public class NotificationService {
             throw new IllegalStateException("프로젝트가 성공적으로 마감되었습니다.");
         }
 
-        String message = projectTitle + " 프로젝트가 목표 금액 미달로 종료되었습니다. 후원이 취소됩니다.";
+        String message = "등록한 " + projectTitle + " 프로젝트가 목표 금액 미달로 종료되었습니다.";
         sendToQueue("프로젝트 마감 (실패)", message, userId, projectNo);
+
+        String creatorId = project.getUser().getUserId();
+        if (!creatorId.equals(userId)) {
+            sendToQueue("프로젝트 마감 (실패)", message, creatorId, projectNo);
+        }
     }
 
     // 알림 소프트 삭제 처리 (isDeleted = true)
