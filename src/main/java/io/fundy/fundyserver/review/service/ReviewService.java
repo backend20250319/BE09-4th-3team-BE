@@ -246,7 +246,7 @@ public class ReviewService {
     }
 
     public List<ReviewResponseDTO> getWrittenReviews(String userId) {
-//        findUserOrThrow(userId);
+        findUserOrThrow(userId);
 
         List<Review> writtenReviews = reviewRepository.findByUser_UserIdOrderByCreatedAtDesc(userId);
 

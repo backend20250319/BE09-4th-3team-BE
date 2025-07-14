@@ -1,5 +1,6 @@
 package io.fundy.fundyserver.pledge.service;
 
+import io.fundy.fundyserver.notification.service.NotificationService;
 import io.fundy.fundyserver.pledge.dto.MyPledgeResponseDTO;
 import io.fundy.fundyserver.pledge.dto.PledgeRequestDTO;
 import io.fundy.fundyserver.pledge.dto.PledgeResponseDTO;
@@ -30,6 +31,21 @@ public class PledgeService {
     private final ProjectRepository projectRepository;
     private final RewardRepository rewardRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
+
+    /**
+     * 사용자가 해당 프로젝트에 후원했는지 검증 (안 했으면 예외 던짐)
+     * @param userId 사용자 ID
+     * @param projectNo 프로젝트 번호
+     */
+    public void validateUserPledgedProject(String userId, Long projectNo) {
+        List<MyPledgeResponseDTO> pledges = getMyPledges(userId);
+        boolean hasPledged = pledges.stream()
+                .anyMatch(p -> p.getProject().getProjectNo().equals(projectNo));
+        if (!hasPledged) {
+            throw new ApiException(ErrorCode.UNAUTHORIZED); // 적절한 예외로 변경 가능
+        }
+    }
 
     /**
      * 프로젝트 후원 처리
@@ -99,6 +115,13 @@ public class PledgeService {
 
         // 목표 금액 달성 시 상태 업데이트
         updateProjectStatus(project);
+
+        notificationService.sendSupportComplete(
+                user.getUserId(),                      // 후원자 ID
+                project.getProjectNo(),                // 프로젝트 번호
+                project.getTitle(),                    // 프로젝트 제목
+                user.getNickname()                     // 후원자 닉네임 (알림 메시지용)
+        );
 
         // 리워드 정보 DTO 변환
         List<PledgeResponseDTO.PledgeRewardInfoDTO> rewardInfos = savedPledge.getPledgeRewards().stream()
