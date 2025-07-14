@@ -234,13 +234,14 @@ public class ReviewService {
                             p.getProjectNo(),
                             p.getTitle(),
                             p.getThumbnailUrl(),
+                            p.getCreatorName(),  // String
                             projectPledges.stream()
                                     .flatMap(pl -> pl.getRewards() != null ? pl.getRewards().stream() : Stream.empty())
-                                    .collect(Collectors.toList()),
+                                    .collect(Collectors.toList()),  // List<PledgeRewardInfoDTO>
                             totalAmount,
                             p.getDeadLine(),
                             pledgedDate,
-                            rewardSummary
+                            rewardSummary   // String
                     );
                 })
                 .filter(Objects::nonNull)
@@ -275,7 +276,6 @@ public class ReviewService {
                 review.getReviewNo(),
                 project != null ? project.getProjectNo() : null,
                 project != null ? project.getTitle() : null,
-                project != null ? project.getCreatorName() : null,
                 review.getUser() != null ? review.getUser().getNickname() : null,
                 review.getRewardStatus(),
                 review.getPlanStatus(),

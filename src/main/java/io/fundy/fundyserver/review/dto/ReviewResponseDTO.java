@@ -15,7 +15,6 @@ public class ReviewResponseDTO {
     private Long reviewNo;
     private Long projectNo;
     private String projectTitle;
-    private String creatorName;
     private String userNickname;
     private int rewardStatus;
     private int planStatus;

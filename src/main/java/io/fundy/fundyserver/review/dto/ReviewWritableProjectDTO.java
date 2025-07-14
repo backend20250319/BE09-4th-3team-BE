@@ -18,6 +18,7 @@ public class ReviewWritableProjectDTO {
     private Long projectNo;
     private String title;
     private String thumbnailUrl;
+    private String creatorName;
     private List<MyPledgeResponseDTO.PledgeRewardInfoDTO> rewards;
     private Integer totalAmount;
     private LocalDate deadLine;
