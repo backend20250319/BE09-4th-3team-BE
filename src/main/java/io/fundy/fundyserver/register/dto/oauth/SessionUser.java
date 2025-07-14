@@ -22,7 +22,7 @@ public class SessionUser implements Serializable {
         this.name = user.getName();
         this.email = user.getEmail();
         this.picture = user.getPicture();
-        this.nickname = user.getNickname(); // 닉네임 설정
+        this.nickname = user.getNickname();
         this.registrationId = user.getRegistrationId();
         this.userType = "OAUTH";
     }
@@ -33,12 +33,11 @@ public class SessionUser implements Serializable {
         this.name = user.getNickname();
         this.email = user.getEmail();
         this.picture = null;
-        this.nickname = user.getNickname(); // 닉네임 설정
+        this.nickname = user.getNickname();
         this.registrationId = "NORMAL";
         this.userType = "NORMAL";
     }
 
-    // 직접 필드 지정
     public SessionUser(Long id, String name, String email, String picture, String nickname, String registrationId, String userType) {
         this.id = id;
         this.name = name;

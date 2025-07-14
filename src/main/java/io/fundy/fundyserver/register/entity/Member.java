@@ -17,5 +17,4 @@ public class Member {
     private String email;
     private String password;
     private String name;
-    // 필요에 따라 필드 추가
 }
