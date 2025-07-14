@@ -37,7 +37,7 @@ public class Project {
     private String title; // 프로젝트 제목
 
     @Lob
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String description; // 상세 설명
 
     @Column(name = "account_number", nullable = false, length = 50)
