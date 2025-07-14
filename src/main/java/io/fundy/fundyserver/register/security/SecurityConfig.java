@@ -88,7 +88,6 @@ public class SecurityConfig {
                 "/api/project/images/upload",
                 "/swagger-ui/**", "/v3/api-docs/**", "/h2-console/**",
                 "/css/**", "/js/**", "/images/**", "/uploads/**"
-//                "/profile_images/**" // 석근 : 프로필 이미지 정적 경로 인증 예외 추가
         );
 
         JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(

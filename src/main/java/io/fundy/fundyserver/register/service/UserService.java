@@ -60,7 +60,6 @@ public class UserService {
                     .addressDetail(req.getAddressDetail())
                     .userStatus(UserStatus.LOGOUT)
                     .roleType(RoleType.USER)
-//                    .profileImg(req.getProfileImg()) // ★ 필드 값 세팅
                     .build();
             try {
                 userRepository.save(user);
@@ -171,11 +170,6 @@ public class UserService {
         user.setAddress(req.getAddress());
         user.setAddressDetail(req.getAddressDetail());
 
-        // profileImg가 들어왔다면 수정
-//        if (req.getProfileImg() != null && !req.getProfileImg().isBlank()) {
-//            user.setProfileImg(req.getProfileImg());
-//        }
-
         userRepository.save(user);
         return toResponse(user);
     }
@@ -232,11 +226,6 @@ public class UserService {
             throw new ApiException(ErrorCode.DUPLICATE_NICKNAME);
         }
 
-        // 프로필 이미지(이미지 값이 있을 때만 변경)
-//        if (req.getProfileImg() != null && !req.getProfileImg().isBlank()) {
-//            user.setProfileImg(req.getProfileImg());
-//        }
-
         user.setNickname(req.getNickname());
         user.setEmail(req.getEmail());
         user.setPhone(req.getPhone());
@@ -247,32 +236,7 @@ public class UserService {
         return toResponse(user);
     }
 
-    // 프로필 이미지 업로드
-//    @Transactional
-//    public String uploadProfileImage(Integer userNo, MultipartFile file) {
-//        User user = userRepository.findById(userNo)
-//                .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
-//
-//        String uploadDir = "C:/profile_images/"; // 서버 내 실제 경로로 수정
-//        String originalFilename = file.getOriginalFilename();
-//        String fileName = userNo + "_" + System.currentTimeMillis() + "_" + originalFilename;
-//        java.nio.file.Path filePath = java.nio.file.Paths.get(uploadDir, fileName);
-//        try {
-//            java.nio.file.Files.createDirectories(filePath.getParent());
-//            file.transferTo(filePath);
-//
-//            String imageUrl = "/profile_images/" + fileName;
-//            user.setProfileImg(imageUrl);
-//            userRepository.save(user);
-//
-//            return imageUrl;
-//        } catch (Exception e) {
-//            logger.error("프로필 이미지 업로드 실패: ", e);
-//            throw new ApiException(ErrorCode.FILE_UPLOAD_FAILED);
-//        }
-//    }
-
-    // User -> UserResponseDTO 변환 (profileImg 포함)
+    // User -> UserResponseDTO 변환
     private UserResponseDTO toResponse(User u) {
         return UserResponseDTO.builder()
                 .userNo(u.getUserNo())
@@ -288,14 +252,6 @@ public class UserService {
                 .updatedAt(u.getUpdatedAt())
                 .lastLoginAt(u.getLastLoginAt())
                 .lastLogoutAt(u.getLastLogoutAt())
-//                .profileImg(u.getProfileImg())
                 .build();
     }
-//    @Transactional
-//    public void updateProfileImagePath(Integer userNo, String imageUrl) {
-//        User user = userRepository.findById(userNo)
-//                .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
-//        user.setProfileImg(imageUrl);
-//        userRepository.save(user);
-//    }
 }
