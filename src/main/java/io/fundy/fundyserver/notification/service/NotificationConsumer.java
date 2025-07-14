@@ -29,8 +29,8 @@ public class NotificationConsumer {
             NotificationMessageDTO message = objectMapper.readValue(messageJson, NotificationMessageDTO.class);
 
             // 중복 체크
-            boolean exists = notificationRepository.existsByUser_UserIdAndProject_ProjectNoAndType(
-                    message.getUserId(), message.getProjectNo(), message.getType());
+            boolean exists = notificationRepository.existsByUser_UserIdAndProject_ProjectNoAndTypeAndMessage(
+                    message.getUserId(), message.getProjectNo(), message.getType(), message.getMessage());
             if (exists) {
                 log.info("중복 알림 발견 - 저장하지 않음: userId={}, projectNo={}, type={}",
                         message.getUserId(), message.getProjectNo(), message.getType());
