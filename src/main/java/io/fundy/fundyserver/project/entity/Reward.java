@@ -26,7 +26,7 @@ public class Reward {
     private Integer amount; // 후원 금액 기준
 
     @Lob
-    @Column(nullable = false)
+    @Column(columnDefinition = "LONGTEXT")
     private String description; // 리워드 상세 설명
 
     @Column
