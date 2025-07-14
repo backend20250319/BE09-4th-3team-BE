@@ -24,11 +24,11 @@ public class Address {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_no")
+    @JoinColumn(name = "user_no", nullable = true) // NULL 허용 명시
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "oauth_user_id")
+    @JoinColumn(name = "oauth_user_id", nullable = true) // NULL 허용 명시
     private OAuthUser oauthUser;
 
     @Column(nullable = false)
