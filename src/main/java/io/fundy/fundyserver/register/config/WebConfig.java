@@ -12,9 +12,6 @@ public class WebConfig implements WebMvcConfigurer {
     @Value("${frontend.url}")
     private String frontendUrl;
 
-    // 정적 리소스 매핑용 상수
-//    private static final String PROFILE_IMAGE_PATH = "file:///C:/profile_images/";
-
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")

@@ -61,11 +61,11 @@ public class HomeController {
         if (socialSuccess) {
             model.addAttribute("message",
                     "[소셜 로그인 성공] " + user.getRegistrationId() + " 계정으로 로그인하셨습니다.");
-            return "success";  // src/main/resources/templates/success.html
+            return "success";
         } else {
             model.addAttribute("message",
                     user.getRegistrationId() + " 로그인에 성공했습니다!");
-            return "home";     // src/main/resources/templates/home.html
+            return "home";
         }
     }
 }

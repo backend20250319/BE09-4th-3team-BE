@@ -25,9 +25,14 @@ public class JwtTokenProvider {
         this.secretKey = Keys.hmacShaKeyFor(props.getSecret().getBytes(StandardCharsets.UTF_8));
     }
 
-    // Access Token 생성
+    // 일반 회원용 Access Token 생성
     public String createAccessToken(String userId, RoleType role) {
-        return buildToken(userId, props.getAccessTokenExpireMs(), role);
+        return buildToken(userId, props.getAccessTokenExpireMs(), role); // sub = userId
+    }
+
+    // 소셜 회원용 Access Token 생성
+    public String createAccessTokenForOAuth(String email, RoleType role) {
+        return buildToken(email, props.getAccessTokenExpireMs(), role); // sub = email
     }
 
     // Refresh Token 생성 (Role 없이 생성)
