@@ -28,10 +28,19 @@ public class NotificationConsumer {
         try {
             NotificationMessageDTO message = objectMapper.readValue(messageJson, NotificationMessageDTO.class);
 
+            // 중복 체크
+            boolean exists = notificationRepository.existsByUser_UserIdAndProject_ProjectNoAndType(
+                    message.getUserId(), message.getProjectNo(), message.getType());
+            if (exists) {
+                log.info("중복 알림 발견 - 저장하지 않음: userId={}, projectNo={}, type={}",
+                        message.getUserId(), message.getProjectNo(), message.getType());
+                return;
+            }
+
             User user = userRepository.findByUserId(message.getUserId())
                     .orElseThrow(() -> new RuntimeException("유저 없음"));
 
-            Project project = projectRepository.findById(message.getProjectNo())
+            Project project = projectRepository.findWithUserByProjectNo(message.getProjectNo())
                     .orElseThrow(() -> new RuntimeException("프로젝트 없음"));
 
             Notification notification = Notification.builder()
@@ -39,6 +48,7 @@ public class NotificationConsumer {
                     .project(project)
                     .type(message.getType())
                     .message(message.getMessage())
+                    .creatorName(project.getUser().getNickname())
                     .isRead(false)
                     .build();
 

@@ -9,7 +9,6 @@ import io.fundy.fundyserver.notification.entity.Notification;
 import io.fundy.fundyserver.notification.repository.NotificationRepository;
 import io.fundy.fundyserver.project.entity.Project;
 import io.fundy.fundyserver.project.repository.ProjectRepository;
-import io.fundy.fundyserver.review.repository.ParticipationRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -27,33 +26,30 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NotificationService {
 
-
     private final RabbitTemplate rabbitTemplate;
     private final ObjectMapper objectMapper;
     private final ProjectRepository projectRepository;
-    private final ParticipationRepository participationRepository;
     private final NotificationRepository notificationRepository;
 
-    // 프로젝트 존재 확인 및 유저 참여 여부 검증
-    private Project validateProjectAndParticipation(String userId, Long projectNo) {
+    // 후원 완료 알림 발송
+    public void sendSupportComplete(String userId, Long projectNo, String projectTitle, String supporterName) {
+        String supporterMessage = projectTitle + " 프로젝트에 후원이 완료되었습니다.";
+        sendToQueue("후원 완료", supporterMessage, userId, projectNo);
+
         Project project = projectRepository.findById(projectNo)
                 .orElseThrow(() -> new RuntimeException("프로젝트를 찾을 수 없습니다."));
-        if (!participationRepository.existsByUser_UserIdAndProject_ProjectNo(userId, projectNo)) {
-            throw new IllegalArgumentException("해당 유저는 이 프로젝트에 참여하지 않았습니다.");
-        }
-        return project;
-    }
+        String creatorId = project.getUser().getUserId();
 
-    // 후원 완료 알림 발송
-    public void sendSupportComplete(String userId, Long projectNo, String projectTitle) {
-        validateProjectAndParticipation(userId, projectNo);
-        String message = projectTitle + " 프로젝트에 후원이 완료되었습니다.";
-        sendToQueue("후원 완료", message, userId, projectNo);
+        if (!creatorId.equals(userId)) {
+            String creatorMessage = supporterName + " 님이 " + projectTitle + " 프로젝트에 후원하였습니다.";
+            sendToQueue("후원 완료", creatorMessage, creatorId, projectNo);
+        }
     }
 
     // 프로젝트 성공 마감 알림 발송
     public void sendProjectSuccess(String userId, Long projectNo, String projectTitle) {
-        Project project = validateProjectAndParticipation(userId, projectNo);
+        Project project = projectRepository.findById(projectNo)
+                .orElseThrow(() -> new RuntimeException("프로젝트를 찾을 수 없습니다."));
 
         LocalDate today = LocalDate.now();
         if (!today.isAfter(project.getDeadLine())) {
@@ -63,13 +59,20 @@ public class NotificationService {
             throw new IllegalStateException("목표 금액이 채워지지 않았습니다.");
         }
 
-        String message = projectTitle + " 프로젝트가 성공적으로 종료되었습니다!";
+        String creatorId = project.getUser().getUserId();
+
+        String message = "등록한 " + projectTitle + " 프로젝트가 성공적으로 종료되었습니다!";
         sendToQueue("프로젝트 마감 (성공)", message, userId, projectNo);
+
+        if (!creatorId.equals(userId)) {
+            sendToQueue("프로젝트 마감 (성공)", message, creatorId, projectNo);
+        }
     }
 
     // 프로젝트 실패 마감 알림 발송
     public void sendProjectFail(String userId, Long projectNo, String projectTitle) {
-        Project project = validateProjectAndParticipation(userId, projectNo);
+        Project project = projectRepository.findById(projectNo)
+                .orElseThrow(() -> new RuntimeException("프로젝트를 찾을 수 없습니다."));
 
         LocalDate today = LocalDate.now();
         if (!today.isAfter(project.getDeadLine())) {
@@ -79,8 +82,14 @@ public class NotificationService {
             throw new IllegalStateException("프로젝트가 성공적으로 마감되었습니다.");
         }
 
-        String message = projectTitle + " 프로젝트가 목표 금액 미달로 종료되었습니다. 후원이 취소됩니다.";
+        String creatorId = project.getUser().getUserId();
+
+        String message = "등록한 " + projectTitle + " 프로젝트가 목표 금액 미달로 종료되었습니다.";
         sendToQueue("프로젝트 마감 (실패)", message, userId, projectNo);
+
+        if (!creatorId.equals(userId)) {
+            sendToQueue("프로젝트 마감 (실패)", message, creatorId, projectNo);
+        }
     }
 
     // 알림 소프트 삭제 처리 (isDeleted = true)
@@ -93,8 +102,8 @@ public class NotificationService {
             throw new AccessDeniedException("알림 삭제 권한이 없습니다.");
         }
 
-        notification.markAsDeleted(); // 삭제 상태 표시
-        notificationRepository.save(notification); // 변경 저장
+        notification.markAsDeleted();
+        notificationRepository.save(notification);
     }
 
     // 읽지 않은 삭제되지 않은 알림 개수 조회
@@ -106,11 +115,11 @@ public class NotificationService {
     @Transactional
     public void markAllNotificationsAsRead(String userId) {
         List<Notification> unread = notificationRepository.findByUser_UserIdAndIsReadFalseAndIsDeletedFalse(userId);
-        unread.forEach(Notification::markAsRead); // 읽음 상태 변경
-        notificationRepository.saveAll(unread); // 변경 저장
+        unread.forEach(Notification::markAsRead);
+        notificationRepository.saveAll(unread);
     }
 
-    // 유저와 타입별 알림 목록 조회 (삭제되지 않은 것만)
+    // 유저와 타입별 알림 목록 조회
     public Page<NotificationResponseDTO> getNotificationsByUserAndType(String userId, String type, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
@@ -127,7 +136,6 @@ public class NotificationService {
             notificationPage = notificationRepository.findByUser_UserIdAndTypeAndIsDeletedFalse(userId, mappedType, pageable);
         }
 
-        // DTO로 변환하여 반환
         return notificationPage.map(n -> new NotificationResponseDTO(
                 n.getNotificationNo(),
                 n.getProject().getProjectNo(),
@@ -136,7 +144,8 @@ public class NotificationService {
                 n.getMessage(),
                 n.getIsRead(),
                 n.getCreatedAt(),
-                n.getUser().getNickname()
+                n.getProject().getCreatorName(),
+                n.getProject().getThumbnailUrl()
         ));
     }
 

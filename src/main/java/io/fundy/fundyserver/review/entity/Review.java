@@ -23,7 +23,7 @@ public class Review {
     @Column(name = "review_no")
     private Long reviewNo;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "project_no", nullable = false)
     private Project project;
 
