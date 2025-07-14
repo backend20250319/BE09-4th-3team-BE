@@ -74,7 +74,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 RoleType roleType = tokenProvider.getRole(token);
 
                 // 2. DB에서 일반 회원(User) 우선 조회
-                Optional<User> userOpt = userRepo.findByEmail(userId);
+                Optional<User> userOpt = userRepo.findByUserId(userId); // ✅ userId로 조회
                 if (userOpt.isPresent()) {
                     CustomUserDetails userDetails = new CustomUserDetails(userOpt.get());
                     PreAuthenticatedAuthenticationToken authentication =
