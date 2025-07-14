@@ -77,6 +77,7 @@ public class SecurityConfig {
                 "/oauth2/authorization/**",
                 "/login/oauth2/code/**",
                 "/api/project/list",
+                "/reviews/project/**",
                 "/api/project/{projectNo:\\d+}",
                 "/api/register/send-auth-code",
                 "/api/register/verify-auth-code",
