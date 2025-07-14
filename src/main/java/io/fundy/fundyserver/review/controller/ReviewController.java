@@ -25,7 +25,7 @@ public class ReviewController {
 
     private final ReviewService reviewService;
 
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<ReviewResponseDTO> createReview(
             @RequestBody ReviewRequestDTO dto,
             @AuthenticationPrincipal String userId
