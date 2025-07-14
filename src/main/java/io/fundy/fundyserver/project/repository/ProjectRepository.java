@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ProjectRepository extends JpaRepository<Project, Long> {
@@ -43,4 +44,7 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     // 🔹 프로젝트 + 연관 카테고리 한 번에 조회 (N+1 문제 해결을 위한 EntityGraph 설정)
     @EntityGraph(attributePaths = "category")
     Page<Project> findAll(Pageable pageable);
+
+    @EntityGraph(attributePaths = {"user"})
+    Optional<Project> findWithUserByProjectNo(Long projectNo);
 }

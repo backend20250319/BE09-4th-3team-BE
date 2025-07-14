@@ -234,6 +234,8 @@ public class ReviewService {
                 .toList();
     }
 
+
+
     private List<MyPledgeResponseDTO> getPledgesSafely(String userId) {
         try {
             List<MyPledgeResponseDTO> pledges = pledgeService.getMyPledges(userId);
@@ -244,7 +246,7 @@ public class ReviewService {
     }
 
     public List<ReviewResponseDTO> getWrittenReviews(String userId) {
-        findUserOrThrow(userId);
+//        findUserOrThrow(userId);
 
         List<Review> writtenReviews = reviewRepository.findByUser_UserIdOrderByCreatedAtDesc(userId);
 
@@ -260,6 +262,7 @@ public class ReviewService {
                 review.getReviewNo(),
                 project != null ? project.getProjectNo() : null,
                 project != null ? project.getTitle() : null,
+                project != null ? project.getCreatorName() : null,
                 review.getUser() != null ? review.getUser().getNickname() : null,
                 review.getRewardStatus(),
                 review.getPlanStatus(),
