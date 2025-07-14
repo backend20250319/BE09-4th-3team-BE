@@ -208,7 +208,7 @@ public class ReviewService {
                     // 이 프로젝트에 해당하는 모든 후원 내역 리스트
                     List<MyPledgeResponseDTO> projectPledges = pledges.stream()
                             .filter(pl -> pl.getProject() != null && pl.getProject().getProjectNo().equals(p.getProjectNo()))
-                            .collect(Collectors.toList());
+                            .toList();
 
                     // 모든 후원 리워드 타이틀+수량을 하나로 합침
                     String rewardSummary = projectPledges.stream()
@@ -244,7 +244,6 @@ public class ReviewService {
                             rewardSummary   // String
                     );
                 })
-                .filter(Objects::nonNull)
                 .toList();
     }
 
