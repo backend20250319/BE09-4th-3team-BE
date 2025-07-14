@@ -75,5 +75,4 @@ public enum ErrorCode {
     public String getMessage() {
         return message;
     }
-
 }
