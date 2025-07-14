@@ -31,14 +31,14 @@ public class UserUpdateRequestDTO {
     @Size(max = 200, message = "※ 상세 주소는 최대 200자까지 입력 가능합니다.")
     private String addressDetail;
 
-    private String profileImg;
+//    private String profileImg;
 
-    // getter, setter 추가
-    public String getProfileImg() {
-        return profileImg;
-    }
-
-    public void setProfileImg(String profileImg) {
-        this.profileImg = profileImg;
-    }
+//    // getter, setter 추가
+//    public String getProfileImg() {
+//        return profileImg;
+//    }
+//
+//    public void setProfileImg(String profileImg) {
+//        this.profileImg = profileImg;
+//    }
 }
