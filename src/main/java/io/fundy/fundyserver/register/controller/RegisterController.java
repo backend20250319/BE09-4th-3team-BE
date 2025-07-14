@@ -1,4 +1,3 @@
-// ✅ RegisterController.java
 package io.fundy.fundyserver.register.controller;
 
 import io.fundy.fundyserver.register.dto.*;
@@ -51,12 +50,18 @@ public class RegisterController {
         UserResponseDTO user = userService.login(loginReq.getUserId(), loginReq.getPassword());
         log.info(" 로그인 성공: userNo={}, nickname={}, role={}", user.getUserNo(), user.getNickname(), user.getRoleType());
 
-        // 2) JWT 실제 토큰 생성 (Access/Refresh)
+        // 2) BANNED 상태 체크 추가
+        if (user.getUserStatus() == UserStatus.BANNED) {
+            log.warn(" BANNED 사용자 로그인 시도: userId={}", loginReq.getUserId());
+            throw new ApiException(ErrorCode.BANNED_USER);
+        }
+
+        // 3) JWT 실제 토큰 생성 (Access/Refresh)
         String accessToken = jwtProvider.createAccessToken(user.getUserId(), user.getRoleType());
         String refreshToken = jwtProvider.createRefreshToken(user.getUserId());
         log.info(" JWT 생성 완료");
 
-        // 3) RefreshToken DB 저장
+        // 4) RefreshToken DB 저장
         RefreshToken tokenEntity = refreshRepo.findById(user.getUserId())
                 .orElse(RefreshToken.builder()
                         .userId(user.getUserId())
@@ -67,7 +72,7 @@ public class RegisterController {
         refreshRepo.save(tokenEntity);
         log.info(" RefreshToken 저장 완료");
 
-        // 4) 토큰 정보를 DTO로 포장
+        // 5) 토큰 정보를 DTO로 포장
         long expiresInMs = jwtProvider.getProps().getAccessTokenExpireMs();
         TokenResponseDTO tokens = TokenResponseDTO.builder()
                 .accessToken(accessToken)
@@ -357,4 +362,3 @@ public class RegisterController {
         }
     }
 }
-
