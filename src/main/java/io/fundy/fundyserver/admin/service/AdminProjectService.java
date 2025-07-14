@@ -65,8 +65,10 @@ public class AdminProjectService {
         long pendingCount = projectRepository.countByProductStatus(ProjectStatus.WAITING_APPROVAL);
         long approvedCount = projectRepository.countByProductStatus(ProjectStatus.APPROVED);
         long rejectedCount = projectRepository.countByProductStatus(ProjectStatus.REJECTED);
+        long inprogressCount = projectRepository.countByProductStatus(ProjectStatus.IN_PROGRESS);
+        long completedCount = projectRepository.countByProductStatus(ProjectStatus.COMPLETED);
 
-        long totalCount = pendingCount + approvedCount + rejectedCount;
+        long totalCount = pendingCount + approvedCount + rejectedCount + inprogressCount + completedCount;
 
         return AdminTotalProjectDto.builder()
                 .total(totalCount)
