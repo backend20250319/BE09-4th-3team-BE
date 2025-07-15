@@ -87,7 +87,8 @@ public class ProjectService {
                         p.getCategory().getName(),
                         p.getProductStatus().name(),
                         p.getCreatorName(),
-                        calculatePercent(p)
+                        calculatePercent(p),
+                        p.getCreatedAt()
                 )).toList();
 
         ProjectListPageResponseDTO.PaginationDTO pagination = new ProjectListPageResponseDTO.PaginationDTO(
