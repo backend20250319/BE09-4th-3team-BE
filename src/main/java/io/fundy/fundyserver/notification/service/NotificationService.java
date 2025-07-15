@@ -11,6 +11,7 @@ import io.fundy.fundyserver.project.entity.Project;
 import io.fundy.fundyserver.project.repository.ProjectRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,12 +25,14 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class NotificationService {
 
     private final RabbitTemplate rabbitTemplate;
     private final ObjectMapper objectMapper;
     private final ProjectRepository projectRepository;
     private final NotificationRepository notificationRepository;
+
 
     // 후원 완료 알림 발송
     public void sendSupportComplete(String userId, Long projectNo, String projectTitle, String supporterName) {
@@ -47,48 +50,31 @@ public class NotificationService {
     }
 
     // 프로젝트 성공 마감 알림 발송
-    public void sendProjectSuccess(String userId, Long projectNo, String projectTitle) {
-        Project project = projectRepository.findById(projectNo)
-                .orElseThrow(() -> new RuntimeException("프로젝트를 찾을 수 없습니다."));
-
-        LocalDate today = LocalDate.now();
-        if (!today.isAfter(project.getDeadLine())) {
-            throw new IllegalStateException("프로젝트 마감일이 지나지 않았습니다.");
-        }
-        if (project.getCurrentAmount() < project.getGoalAmount()) {
-            throw new IllegalStateException("목표 금액이 채워지지 않았습니다.");
-        }
-
-        String creatorId = project.getUser().getUserId();
-
+    public void sendProjectSuccess(String projectTitle, Long projectNo, String creatorId, List<String> supporterIds) {
         String message = "등록한 " + projectTitle + " 프로젝트가 성공적으로 종료되었습니다!";
-        sendToQueue("프로젝트 마감 (성공)", message, userId, projectNo);
 
-        if (!creatorId.equals(userId)) {
-            sendToQueue("프로젝트 마감 (성공)", message, creatorId, projectNo);
+        // 창작자에게 알림
+        sendToQueue("프로젝트 마감 (성공)", message, creatorId, projectNo);
+
+        // 후원자 전체에게 알림 (창작자 중복 제외)
+        for (String supporterId : supporterIds) {
+            if (!supporterId.equals(creatorId)) {
+                sendToQueue("프로젝트 마감 (성공)", message, supporterId, projectNo);
+            }
         }
     }
-
     // 프로젝트 실패 마감 알림 발송
-    public void sendProjectFail(String userId, Long projectNo, String projectTitle) {
-        Project project = projectRepository.findById(projectNo)
-                .orElseThrow(() -> new RuntimeException("프로젝트를 찾을 수 없습니다."));
-
-        LocalDate today = LocalDate.now();
-        if (!today.isAfter(project.getDeadLine())) {
-            throw new IllegalStateException("프로젝트 마감일이 지나지 않았습니다.");
-        }
-        if (project.getCurrentAmount() >= project.getGoalAmount()) {
-            throw new IllegalStateException("프로젝트가 성공적으로 마감되었습니다.");
-        }
-
-        String creatorId = project.getUser().getUserId();
-
+    public void sendProjectFail(String projectTitle, Long projectNo, String creatorId, List<String> supporterIds) {
         String message = "등록한 " + projectTitle + " 프로젝트가 목표 금액 미달로 종료되었습니다.";
-        sendToQueue("프로젝트 마감 (실패)", message, userId, projectNo);
 
-        if (!creatorId.equals(userId)) {
-            sendToQueue("프로젝트 마감 (실패)", message, creatorId, projectNo);
+        // 창작자에게 알림
+        sendToQueue("프로젝트 마감 (실패)", message, creatorId, projectNo);
+
+        // 후원자 전체에게 알림 (창작자 중복 제외)
+        for (String supporterId : supporterIds) {
+            if (!supporterId.equals(creatorId)) {
+                sendToQueue("프로젝트 마감 (실패)", message, supporterId, projectNo);
+            }
         }
     }
 
@@ -160,6 +146,8 @@ public class NotificationService {
 
         try {
             String jsonMessage = objectMapper.writeValueAsString(dto);
+            log.info("📬 큐에 메시지 전송됨 → type: {}, userId: {}, projectNo: {}, message: {}",
+                    type, userId, projectNo, content);
             rabbitTemplate.convertAndSend(
                     RabbitMQConfig.EXCHANGE_NAME,
                     RabbitMQConfig.ROUTING_KEY,

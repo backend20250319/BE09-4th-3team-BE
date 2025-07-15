@@ -11,9 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +22,7 @@ public class ReviewController {
 
     private final ReviewService reviewService;
 
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<ReviewResponseDTO> createReview(
             @RequestBody ReviewRequestDTO dto,
             @AuthenticationPrincipal String userId
@@ -66,6 +63,7 @@ public class ReviewController {
             @PathVariable Long reviewNo,
             @AuthenticationPrincipal String userId
     ) {
+        System.out.println("👉1 인증된 사용자 ID: " + userId);
         reviewService.deleteReview(reviewNo, userId);
         return ResponseEntity.ok(Map.of("message", "리뷰가 성공적으로 삭제되었습니다."));
     }
@@ -74,6 +72,7 @@ public class ReviewController {
     public ResponseEntity<List<ReviewWritableProjectDTO>> getWritableProjects(
             @AuthenticationPrincipal String userId
     ) {
+        System.out.println("👉2 인증된 사용자 ID: " + userId);
         List<ReviewWritableProjectDTO> result = reviewService.getWritableProjects(userId);
         return ResponseEntity.ok(result);
     }
