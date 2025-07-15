@@ -12,4 +12,6 @@ public class AdminTotalProjectDto {
     private long pending;
     private long approved;
     private long rejected;
+    private long inProgress;   // 추가
+    private long completed;
 }

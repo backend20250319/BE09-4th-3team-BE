@@ -4,7 +4,11 @@ import io.fundy.fundyserver.pledge.entity.Pledge;
 import io.fundy.fundyserver.project.entity.Project;
 import io.fundy.fundyserver.register.entity.User;
 import io.lettuce.core.dynamic.annotation.Param;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+// AdminPledgeService에서 추가
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
@@ -23,4 +27,28 @@ public interface PledgeRepository extends JpaRepository<Pledge, Long> {
 
     @Query("SELECT DISTINCT p.user.userId FROM Pledge p WHERE p.project.projectNo = :projectNo")
     List<String> findDistinctUserIdsByProjectNo(@Param("projectNo") Long projectNo);
+
+    // AdminPledgeService에서 추가
+    @Query("SELECT p FROM Pledge p " +
+            "JOIN FETCH p.user u " +
+            "JOIN FETCH p.project prj")
+    List<Pledge> findAllWithAssociations(); // 기존 (전체 조회)
+
+    @Query(
+            value = "SELECT p FROM Pledge p JOIN FETCH p.user u JOIN FETCH p.project prj",
+            countQuery = "SELECT COUNT(p) FROM Pledge p"
+    )
+    Page<Pledge> findAllWithAssociations(Pageable pageable);
+
+    @Query("SELECT COUNT(p) FROM Pledge p")
+    Long countTotalPledges();
+
+    @Query("SELECT SUM(p.totalAmount) FROM Pledge p")
+    Long sumTotalPledgedAmount();
+
+    @Query("SELECT COUNT(p) FROM Pledge p WHERE DATE(p.createdAt) = CURRENT_DATE")
+    Long countTodayPledges();
+
+    @Query("SELECT COUNT(DISTINCT p.user.id) FROM Pledge p")
+    Long countDistinctBackers();
 }
