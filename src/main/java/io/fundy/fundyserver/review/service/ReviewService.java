@@ -21,6 +21,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -40,10 +41,6 @@ public class ReviewService {
     private User findUserOrThrow(String userId) {
         User user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new ReviewException(ReviewErrorCode.USER_NOT_FOUND));
-
-        if (user.getRoleType() == RoleType.ADMIN) {
-            throw new ReviewException(ReviewErrorCode.NOT_ALLOWED_FOR_ADMIN);
-        }
 
         return user;
     }
@@ -177,10 +174,6 @@ public class ReviewService {
                 System.out.println(" - No rewards");
             }
         }
-
-
-
-
 
         if (pledges.isEmpty()) {
             return Collections.emptyList();
