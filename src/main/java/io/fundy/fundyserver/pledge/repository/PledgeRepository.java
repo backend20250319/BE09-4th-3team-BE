@@ -4,6 +4,8 @@ import io.fundy.fundyserver.pledge.entity.Pledge;
 import io.fundy.fundyserver.project.entity.Project;
 import io.fundy.fundyserver.register.entity.User;
 import io.lettuce.core.dynamic.annotation.Param;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 // AdminPledgeService에서 추가
 import org.springframework.data.jpa.repository.Query;
@@ -27,7 +29,13 @@ public interface PledgeRepository extends JpaRepository<Pledge, Long> {
     @Query("SELECT p FROM Pledge p " +
             "JOIN FETCH p.user u " +
             "JOIN FETCH p.project prj")
-    List<Pledge> findAllWithAssociations();
+    List<Pledge> findAllWithAssociations(); // 기존 (전체 조회)
+
+    @Query(
+            value = "SELECT p FROM Pledge p JOIN FETCH p.user u JOIN FETCH p.project prj",
+            countQuery = "SELECT COUNT(p) FROM Pledge p"
+    )
+    Page<Pledge> findAllWithAssociations(Pageable pageable);
 
     @Query("SELECT DISTINCT p.user.userId FROM Pledge p WHERE p.project.projectNo = :projectNo")
     List<String> findDistinctUserIdsByProjectNo(@Param("projectNo") Long projectNo);

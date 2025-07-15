@@ -14,6 +14,9 @@ import io.fundy.fundyserver.admin.dto.DailyFundingDto;
 import java.util.Map;
 import java.util.Comparator;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Service
 @RequiredArgsConstructor
 public class AdminPledgeService {
@@ -64,6 +67,9 @@ public class AdminPledgeService {
                 .sorted(Comparator.comparing(DailyFundingDto::getDate))
                 .collect(Collectors.toList());
     }
-
+    public Page<AdminPledgesResponseDto> getPledgesWithPaging(Pageable pageable) {
+        return pledgeRepository.findAllWithAssociations(pageable)
+                .map(this::convertToDto);
+    }
 }
 
