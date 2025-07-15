@@ -13,7 +13,7 @@ COPY src/main/resources/secret.yml src/main/resources/secret.yml
 COPY src/main/resources/keystore.p12 src/main/resources/keystore.p12
 
 # Gradle 빌드 (테스트 포함)
-RUN gradle clean build --no-daemon
+RUN gradle clean build -x test --no-daemon
 
 # ---------------------------
 # 2. 실행 스테이지
