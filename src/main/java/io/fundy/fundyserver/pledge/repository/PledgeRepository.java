@@ -4,6 +4,8 @@ import io.fundy.fundyserver.pledge.entity.Pledge;
 import io.fundy.fundyserver.project.entity.Project;
 import io.fundy.fundyserver.register.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+// AdminPledgeService에서 추가
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.time.LocalDateTime;
@@ -18,4 +20,10 @@ public interface PledgeRepository extends JpaRepository<Pledge, Long> {
      * @return 이전에 생성된 후원 수
      */
     int countByProjectAndCreatedAtBefore(Project project, LocalDateTime createdAt);
+
+    // AdminPledgeService에서 추가
+    @Query("SELECT p FROM Pledge p " +
+            "JOIN FETCH p.user u " +
+            "JOIN FETCH p.project prj")
+    List<Pledge> findAllWithAssociations();
 }
