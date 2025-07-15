@@ -25,6 +25,9 @@ public interface PledgeRepository extends JpaRepository<Pledge, Long> {
      */
     int countByProjectAndCreatedAtBefore(Project project, LocalDateTime createdAt);
 
+    @Query("SELECT DISTINCT p.user.userId FROM Pledge p WHERE p.project.projectNo = :projectNo")
+    List<String> findDistinctUserIdsByProjectNo(@Param("projectNo") Long projectNo);
+
     // AdminPledgeService에서 추가
     @Query("SELECT p FROM Pledge p " +
             "JOIN FETCH p.user u " +
@@ -37,6 +40,15 @@ public interface PledgeRepository extends JpaRepository<Pledge, Long> {
     )
     Page<Pledge> findAllWithAssociations(Pageable pageable);
 
-    @Query("SELECT DISTINCT p.user.userId FROM Pledge p WHERE p.project.projectNo = :projectNo")
-    List<String> findDistinctUserIdsByProjectNo(@Param("projectNo") Long projectNo);
+    @Query("SELECT COUNT(p) FROM Pledge p")
+    Long countTotalPledges();
+
+    @Query("SELECT SUM(p.totalAmount) FROM Pledge p")
+    Long sumTotalPledgedAmount();
+
+    @Query("SELECT COUNT(p) FROM Pledge p WHERE DATE(p.createdAt) = CURRENT_DATE")
+    Long countTodayPledges();
+
+    @Query("SELECT COUNT(DISTINCT p.user.id) FROM Pledge p")
+    Long countDistinctBackers();
 }

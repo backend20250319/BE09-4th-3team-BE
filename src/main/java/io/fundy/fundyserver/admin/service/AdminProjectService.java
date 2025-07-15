@@ -75,6 +75,8 @@ public class AdminProjectService {
                 .pending(pendingCount)
                 .approved(approvedCount)
                 .rejected(rejectedCount)
+                .inProgress(inprogressCount)
+                .completed(completedCount)
                 .build();
     }
 }

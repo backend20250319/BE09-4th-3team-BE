@@ -40,6 +40,8 @@ public class DashboardService {
         result.put("PENDING", projectRepository.countByProductStatus(ProjectStatus.WAITING_APPROVAL));
         result.put("APPROVED", projectRepository.countByProductStatus(ProjectStatus.APPROVED));
         result.put("REJECTED", projectRepository.countByProductStatus(ProjectStatus.REJECTED));
+        result.put("IN_PROGRESS", projectRepository.countByProductStatus(ProjectStatus.IN_PROGRESS));
+        result.put("COMPLETED", projectRepository.countByProductStatus(ProjectStatus.COMPLETED));
         return result;
     }
 }

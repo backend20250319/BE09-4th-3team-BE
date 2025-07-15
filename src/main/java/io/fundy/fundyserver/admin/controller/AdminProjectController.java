@@ -52,6 +52,4 @@ public class AdminProjectController {
         AdminTotalProjectDto stats = adminProjectService.getProjectStatistics();
         return ResponseEntity.ok(stats);
     }
-
-
 }

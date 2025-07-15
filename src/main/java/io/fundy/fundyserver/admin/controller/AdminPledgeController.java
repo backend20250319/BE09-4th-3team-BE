@@ -2,14 +2,14 @@ package io.fundy.fundyserver.admin.controller;
 
 import io.fundy.fundyserver.admin.dto.AdminPledgesResponseDto;
 import io.fundy.fundyserver.admin.dto.DailyFundingDto;
+import io.fundy.fundyserver.admin.dto.PledgeSummaryDto;
 import io.fundy.fundyserver.admin.service.AdminPledgeService;
+import io.fundy.fundyserver.admin.service.PledgeSummaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -19,6 +19,7 @@ import java.util.List;
 public class AdminPledgeController {
 
     private final AdminPledgeService adminPledgeService;
+    private final PledgeSummaryService pledgeSummaryService;
 
     @GetMapping
     public ResponseEntity<Page<AdminPledgesResponseDto>> getAll(Pageable pageable) {
@@ -29,5 +30,10 @@ public class AdminPledgeController {
     public ResponseEntity<List<DailyFundingDto>> getDailyFundingSummary() {
         List<DailyFundingDto> summary = adminPledgeService.getDailyFundingSummary();
         return ResponseEntity.ok(summary);
+    }
+
+    @GetMapping("/summary")
+    public ResponseEntity<PledgeSummaryDto> getPledgeSummary() {
+        return ResponseEntity.ok(pledgeSummaryService.getPledgeSummary());
     }
 }
