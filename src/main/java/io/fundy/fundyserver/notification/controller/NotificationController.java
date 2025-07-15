@@ -5,6 +5,7 @@ import io.fundy.fundyserver.notification.dto.NotificationRequestDTO;
 import io.fundy.fundyserver.notification.dto.NotificationResponseDTO;
 import io.fundy.fundyserver.notification.dto.NotificationSendRequestDTO;
 import io.fundy.fundyserver.notification.service.NotificationService;
+import io.fundy.fundyserver.project.service.ProjectService;
 import io.fundy.fundyserver.register.entity.User;
 import io.fundy.fundyserver.register.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,67 +21,69 @@ import org.springframework.web.bind.annotation.*;
 public class NotificationController {
 
     private final NotificationService notificationService;
+    private final ProjectService projectService;
     private final UserRepository userRepository;
 
 
     /**
      * 후원 완료 알림 전송
      * @param dto 프로젝트 번호, 제목 포함 DTO
-     * @param userId 인증된 사용자 ID (스프링 시큐리티에서 주입)
-     * @return 성공 메시지
+     * @param userId 인증된 사용자 ID (스프링 시큐리티가 자동 주입)
+     * @return 성공 메시지 반환
      */
     @PostMapping("/support")
     public ResponseEntity<String> sendSupport(
             @RequestBody NotificationSendRequestDTO dto,
             @AuthenticationPrincipal String userId
     ) {
+        // 사용자 닉네임 조회, 없으면 "알 수 없는 사용자"로 대체
         String supporterName = userRepository.findByUserId(userId)
                 .map(User::getNickname)
                 .orElse("알 수 없는 사용자");
 
-        notificationService.sendSupportComplete(userId, dto.getProjectNo(), dto.getProjectTitle(), supporterName);
+        // 후원 완료 알림을 프로젝트 서비스에 위임 (직접 NotificationService 호출하지 않음)
+        projectService.sendSupportCompleteNotification(userId, dto.getProjectNo(), dto.getProjectTitle(), supporterName);
+
         return ResponseEntity.ok("후원 완료 알림이 성공적으로 전송되었습니다.");
     }
 
+    /**
+     * 프로젝트 성공 알림 전송
+     * @param dto 프로젝트 정보 포함 DTO
+     * @param userId 인증된 사용자 ID
+     * @return 성공 메시지 반환
+     */
     @PostMapping("/success")
     public ResponseEntity<String> sendSuccess(
             @RequestBody NotificationSendRequestDTO dto,
             @AuthenticationPrincipal String userId
     ) {
-        try {
-            notificationService.sendProjectSuccess(userId, dto.getProjectNo(), dto.getProjectTitle());
-            return ResponseEntity.ok("프로젝트 성공 알림이 성공적으로 전송되었습니다.");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
+        // 프로젝트 성공 알림을 프로젝트 서비스에 위임
+        projectService.sendProjectSuccessNotification(userId, dto.getProjectNo(), dto.getProjectTitle());
+        return ResponseEntity.ok("프로젝트 성공 알림이 성공적으로 전송되었습니다.");
     }
 
+    /**
+     * 프로젝트 실패 알림 전송
+     * @param dto 프로젝트 정보 포함 DTO
+     * @param userId 인증된 사용자 ID
+     * @return 성공 메시지 반환
+     */
     @PostMapping("/fail")
     public ResponseEntity<String> sendFail(
             @RequestBody NotificationSendRequestDTO dto,
             @AuthenticationPrincipal String userId
     ) {
-        try {
-            notificationService.sendProjectFail(userId, dto.getProjectNo(), dto.getProjectTitle());
-            return ResponseEntity.ok("프로젝트 실패 알림이 성공적으로 전송되었습니다.");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
+        // 프로젝트 실패 알림을 프로젝트 서비스에 위임
+        projectService.sendProjectFailNotification(userId, dto.getProjectNo(), dto.getProjectTitle());
+        return ResponseEntity.ok("프로젝트 실패 알림이 성공적으로 전송되었습니다.");
     }
 
     /**
-     * 알림 삭제 (소프트 삭제)
+     * 알림 소프트 삭제 (삭제 처리 표시만 함)
      * @param notificationNo 삭제할 알림 ID
      * @param userId 인증된 사용자 ID (본인 알림만 삭제 가능)
-     * @return 삭제 성공 시 204 No Content 반환
+     * @return 삭제 완료 메시지 반환
      */
     @PatchMapping("/{notificationNo}/delete")
     public ResponseEntity<String> softDeleteNotification(
@@ -114,9 +117,9 @@ public class NotificationController {
     }
 
     /**
-     * 알림 목록 조회 (타입 및 페이지네이션 적용)
+     * 알림 목록 조회 (타입별, 페이징 적용)
      * @param userId 인증된 사용자 ID
-     * @param dto 조회 조건 DTO (타입, 페이지, 사이즈)
+     * @param dto 조회 조건 DTO (알림 타입, 페이지 번호, 페이지 사이즈)
      * @return 페이징된 알림 목록 DTO 반환
      */
     @GetMapping

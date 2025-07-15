@@ -33,19 +33,19 @@ public class PledgeService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
 
-    /**
-     * 사용자가 해당 프로젝트에 후원했는지 검증 (안 했으면 예외 던짐)
-     * @param userId 사용자 ID
-     * @param projectNo 프로젝트 번호
-     */
-    public void validateUserPledgedProject(String userId, Long projectNo) {
-        List<MyPledgeResponseDTO> pledges = getMyPledges(userId);
-        boolean hasPledged = pledges.stream()
-                .anyMatch(p -> p.getProject().getProjectNo().equals(projectNo));
-        if (!hasPledged) {
-            throw new ApiException(ErrorCode.UNAUTHORIZED); // 적절한 예외로 변경 가능
-        }
-    }
+//    /**
+//     * 사용자가 해당 프로젝트에 후원했는지 검증 (안 했으면 예외 던짐)
+//     * @param userId 사용자 ID
+//     * @param projectNo 프로젝트 번호
+//     */
+//    public void validateUserPledgedProject(String userId, Long projectNo) {
+//        List<MyPledgeResponseDTO> pledges = getMyPledges(userId);
+//        boolean hasPledged = pledges.stream()
+//                .anyMatch(p -> p.getProject().getProjectNo().equals(projectNo));
+//        if (!hasPledged) {
+//            throw new ApiException(ErrorCode.UNAUTHORIZED); // 적절한 예외로 변경 가능
+//        }
+//    }
 
     /**
      * 프로젝트 후원 처리
@@ -116,11 +116,12 @@ public class PledgeService {
         // 목표 금액 달성 시 상태 업데이트
         updateProjectStatus(project);
 
+        // 후원 완료 알림 전송
         notificationService.sendSupportComplete(
-                user.getUserId(),                      // 후원자 ID
-                project.getProjectNo(),                // 프로젝트 번호
-                project.getTitle(),                    // 프로젝트 제목
-                user.getNickname()                     // 후원자 닉네임 (알림 메시지용)
+                user.getUserId(),
+                project.getProjectNo(),
+                project.getTitle(),
+                user.getNickname()
         );
 
         // 리워드 정보 DTO 변환
@@ -142,6 +143,12 @@ public class PledgeService {
             savedPledge.getAdditionalAmount(),
             savedPledge.getTotalAmount()
         );
+    }
+
+    // 프로젝트별 후원자 목록 조회
+    @Transactional(readOnly = true)
+    public List<String> getSupporterUserIdsByProjectNo(Long projectNo) {
+        return pledgeRepository.findDistinctUserIdsByProjectNo(projectNo);
     }
 
     /**

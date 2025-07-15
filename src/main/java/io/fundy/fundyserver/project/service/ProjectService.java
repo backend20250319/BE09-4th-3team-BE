@@ -1,5 +1,7 @@
 package io.fundy.fundyserver.project.service;
 
+import io.fundy.fundyserver.notification.service.NotificationService;
+import io.fundy.fundyserver.pledge.service.PledgeService;
 import io.fundy.fundyserver.project.dto.project.*;
 import io.fundy.fundyserver.project.dto.reward.RewardRequestDTO;
 import io.fundy.fundyserver.project.entity.Category;
@@ -30,6 +32,8 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final PledgeService pledgeService;
+    private final NotificationService notificationService;
 
     /***
      * 프로젝트 등록
@@ -121,10 +125,25 @@ public class ProjectService {
                 );
 
         for (Project p : expiredProjects) {
+
+            List<String> supporterIds = pledgeService.getSupporterUserIdsByProjectNo(p.getProjectNo());
+
             if (p.getCurrentAmount() >= p.getGoalAmount()) {
                 p.setProductStatus(ProjectStatus.COMPLETED);
+                notificationService.sendProjectSuccess(
+                        p.getTitle(),
+                        p.getProjectNo(),
+                        p.getUser().getUserId(),
+                        supporterIds
+                );
             } else {
                 p.setProductStatus(ProjectStatus.FAILED);
+                notificationService.sendProjectFail(
+                        p.getTitle(),
+                        p.getProjectNo(),
+                        p.getUser().getUserId(),
+                        supporterIds
+                );
             }
         }
         projectRepository.saveAll(expiredProjects);
@@ -152,6 +171,49 @@ public class ProjectService {
                 .orElseThrow(() -> new ApiException(ErrorCode.PROJECT_NOT_FOUND));
 
         return ProjectDetailResponseDTO.from(project); // 정적 팩토리 메서드 또는 생성자 방식
+    }
+
+    /**
+     * 후원 완료 알림 요청 메서드
+     * 사용자가 프로젝트를 후원했을 때, 창작자에게 후원 완료 알림을 전송합니다.
+     *
+     * @param supporterId 후원자 ID
+     * @param projectNo 프로젝트 번호
+     * @param projectTitle 프로젝트 제목
+     * @param supporterName 후원자 닉네임
+     */
+    @Transactional
+    public void sendSupportCompleteNotification(String supporterId, Long projectNo, String projectTitle, String supporterName) {
+        notificationService.sendSupportComplete(supporterId, projectNo, projectTitle, supporterName);
+    }
+
+    /**
+     * 프로젝트 성공 알림 요청 메서드
+     * 프로젝트가 성공한 경우, 창작자와 해당 프로젝트의 후원자들에게 성공 알림을 전송합니다.
+     *
+     * @param creatorId 창작자 ID
+     * @param projectNo 프로젝트 번호
+     * @param projectTitle 프로젝트 제목
+     */
+    @Transactional
+    public void sendProjectSuccessNotification(String creatorId, Long projectNo, String projectTitle) {
+        List<String> supporterIds = pledgeService.getSupporterUserIdsByProjectNo(projectNo);
+        notificationService.sendProjectSuccess(projectTitle, projectNo, creatorId, supporterIds);
+    }
+
+    /**
+     * 프로젝트 실패 알림 요청 메서드
+     * 프로젝트가 마감됐지만 목표 금액을 달성하지 못한 경우,
+     * 창작자와 후원자들에게 실패 알림을 전송합니다.
+     *
+     * @param creatorId 창작자 ID
+     * @param projectNo 프로젝트 번호
+     * @param projectTitle 프로젝트 제목
+     */
+    @Transactional
+    public void sendProjectFailNotification(String creatorId, Long projectNo, String projectTitle) {
+        List<String> supporterIds = pledgeService.getSupporterUserIdsByProjectNo(projectNo);
+        notificationService.sendProjectFail(projectTitle, projectNo, creatorId, supporterIds);
     }
 }
 

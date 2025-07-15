@@ -28,7 +28,7 @@ public class NotificationConsumer {
         try {
             NotificationMessageDTO message = objectMapper.readValue(messageJson, NotificationMessageDTO.class);
 
-//            // 중복 체크
+//            // 중복 체크, 프로젝트별 한 번의 후원만 가능할 경우
 //            boolean exists = notificationRepository.existsByUser_UserIdAndProject_ProjectNoAndTypeAndMessage(
 //                    message.getUserId(), message.getProjectNo(), message.getType(), message.getMessage());
 //            if (exists) {
