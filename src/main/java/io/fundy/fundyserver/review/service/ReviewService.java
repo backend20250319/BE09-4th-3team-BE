@@ -274,7 +274,9 @@ public class ReviewService {
         return new ReviewResponseDTO(
                 review.getReviewNo(),
                 project != null ? project.getProjectNo() : null,
+                review.getUser() != null ? review.getUser().getUserId() : null,
                 project != null ? project.getTitle() : null,
+                project != null ? project.getCreatorName() : null,
                 review.getUser() != null ? review.getUser().getNickname() : null,
                 review.getRewardStatus(),
                 review.getPlanStatus(),
