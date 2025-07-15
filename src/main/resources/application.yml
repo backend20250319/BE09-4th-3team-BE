@@ -13,7 +13,8 @@ spring:
     name: fundyserver
 
   config:
-    import: classpath:secret.yml
+    import: file:C:/jenkins-secrets/secret.yml
+
 
   servlet:
     multipart:
