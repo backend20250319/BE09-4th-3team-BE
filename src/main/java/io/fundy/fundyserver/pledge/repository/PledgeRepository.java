@@ -3,8 +3,10 @@ package io.fundy.fundyserver.pledge.repository;
 import io.fundy.fundyserver.pledge.entity.Pledge;
 import io.fundy.fundyserver.project.entity.Project;
 import io.fundy.fundyserver.register.entity.User;
+import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 // AdminPledgeService에서 추가
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
@@ -26,4 +28,7 @@ public interface PledgeRepository extends JpaRepository<Pledge, Long> {
             "JOIN FETCH p.user u " +
             "JOIN FETCH p.project prj")
     List<Pledge> findAllWithAssociations();
+
+    @Query("SELECT DISTINCT p.user.userId FROM Pledge p WHERE p.project.projectNo = :projectNo")
+    List<String> findDistinctUserIdsByProjectNo(@Param("projectNo") Long projectNo);
 }

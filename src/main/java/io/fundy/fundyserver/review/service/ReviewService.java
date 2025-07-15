@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -203,34 +204,46 @@ public class ReviewService {
                 .filter(p -> p.getCurrentAmount() >= p.getGoalAmount())
                 .filter(p -> p.getDeadLine() != null && p.getDeadLine().isBefore(LocalDate.now()))
                 .filter(p -> !hasActiveReviewMap.containsKey(p.getProjectNo()))
-                .map(p -> pledges.stream()
-                        .filter(pl -> pl.getProject() != null && pl.getProject().getProjectNo().equals(p.getProjectNo()))
-                        .findFirst()
-                        .map(pl -> {
-                            String rewardSummary = (pl.getRewards() != null && !pl.getRewards().isEmpty())
+                .map(p -> {
+                    // 이 프로젝트에 해당하는 모든 후원 내역 리스트
+                    List<MyPledgeResponseDTO> projectPledges = pledges.stream()
+                            .filter(pl -> pl.getProject() != null && pl.getProject().getProjectNo().equals(p.getProjectNo()))
+                            .toList();
+
+                    // 모든 후원 리워드 타이틀+수량을 하나로 합침
+                    String rewardSummary = projectPledges.stream()
+                            .flatMap(pl -> pl.getRewards() != null
                                     ? pl.getRewards().stream()
-                                    .map(r -> r.getRewardTitle() + " x " + r.getQuantity())
-                                    .collect(Collectors.joining(", "))
-                                    : "";
+                                    : Stream.<MyPledgeResponseDTO.PledgeRewardInfoDTO>empty())
+                            .map(r -> r.getRewardTitle() + " x " + r.getQuantity())
+                            .collect(Collectors.joining("\n"));
 
-                            LocalDate pledgedDate = null;
-                            if (pl.getCreatedAt() != null) {
-                                pledgedDate = pl.getCreatedAt().toLocalDate();
-                            }
+                    // 첫 번째 후원 날짜 (대표 날짜)
+                    LocalDate pledgedDate = null;
+                    if (!projectPledges.isEmpty() && projectPledges.get(0).getCreatedAt() != null) {
+                        pledgedDate = projectPledges.get(0).getCreatedAt().toLocalDate();
+                    }
 
-                            return new ReviewWritableProjectDTO(
-                                    p.getProjectNo(),
-                                    p.getTitle(),
-                                    p.getThumbnailUrl(),
-                                    rewardSummary,
-                                    pl.getTotalAmount(),
-                                    p.getDeadLine(),
-                                    pledgedDate
-                            );
-                        })
-                        .orElse(null)
-                )
-                .filter(Objects::nonNull)
+                    // 총 후원 금액도 여러 후원 합산 가능하면 바꿔야 함
+                    Integer totalAmount = projectPledges.stream()
+                            .map(MyPledgeResponseDTO::getTotalAmount)
+                            .filter(Objects::nonNull)
+                            .reduce(0, Integer::sum);
+
+                    return new ReviewWritableProjectDTO(
+                            p.getProjectNo(),
+                            p.getTitle(),
+                            p.getThumbnailUrl(),
+                            p.getCreatorName(),  // String
+                            projectPledges.stream()
+                                    .flatMap(pl -> pl.getRewards() != null ? pl.getRewards().stream() : Stream.empty())
+                                    .collect(Collectors.toList()),  // List<PledgeRewardInfoDTO>
+                            totalAmount,
+                            p.getDeadLine(),
+                            pledgedDate,
+                            rewardSummary   // String
+                    );
+                })
                 .toList();
     }
 
@@ -246,7 +259,7 @@ public class ReviewService {
     }
 
     public List<ReviewResponseDTO> getWrittenReviews(String userId) {
-//        findUserOrThrow(userId);
+        findUserOrThrow(userId);
 
         List<Review> writtenReviews = reviewRepository.findByUser_UserIdOrderByCreatedAtDesc(userId);
 
@@ -261,6 +274,7 @@ public class ReviewService {
         return new ReviewResponseDTO(
                 review.getReviewNo(),
                 project != null ? project.getProjectNo() : null,
+                review.getUser() != null ? review.getUser().getUserId() : null,
                 project != null ? project.getTitle() : null,
                 project != null ? project.getCreatorName() : null,
                 review.getUser() != null ? review.getUser().getNickname() : null,

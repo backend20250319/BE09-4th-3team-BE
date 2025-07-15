@@ -6,8 +6,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum Satisfaction {
 
     bad(1, "bad"),
-    neutral(2, "neutral"),
-    good(3, "good");
+    neutral(3, "neutral"),
+    good(5, "good");
 
     private final int value;
     private final String name;
@@ -17,11 +17,11 @@ public enum Satisfaction {
         this.name = name;
     }
 
-    @JsonValue
     public String getName() {
         return name;
     }
 
+    @JsonValue
     public int getValue() {
         return value;
     }

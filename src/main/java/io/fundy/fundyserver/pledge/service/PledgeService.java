@@ -1,5 +1,6 @@
 package io.fundy.fundyserver.pledge.service;
 
+import io.fundy.fundyserver.notification.service.NotificationService;
 import io.fundy.fundyserver.pledge.dto.MyPledgeResponseDTO;
 import io.fundy.fundyserver.pledge.dto.PledgeRequestDTO;
 import io.fundy.fundyserver.pledge.dto.PledgeResponseDTO;
@@ -30,6 +31,21 @@ public class PledgeService {
     private final ProjectRepository projectRepository;
     private final RewardRepository rewardRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
+
+//    /**
+//     * 사용자가 해당 프로젝트에 후원했는지 검증 (안 했으면 예외 던짐)
+//     * @param userId 사용자 ID
+//     * @param projectNo 프로젝트 번호
+//     */
+//    public void validateUserPledgedProject(String userId, Long projectNo) {
+//        List<MyPledgeResponseDTO> pledges = getMyPledges(userId);
+//        boolean hasPledged = pledges.stream()
+//                .anyMatch(p -> p.getProject().getProjectNo().equals(projectNo));
+//        if (!hasPledged) {
+//            throw new ApiException(ErrorCode.UNAUTHORIZED); // 적절한 예외로 변경 가능
+//        }
+//    }
 
     /**
      * 프로젝트 후원 처리
@@ -100,6 +116,14 @@ public class PledgeService {
         // 목표 금액 달성 시 상태 업데이트
         updateProjectStatus(project);
 
+        // 후원 완료 알림 전송
+        notificationService.sendSupportComplete(
+                user.getUserId(),
+                project.getProjectNo(),
+                project.getTitle(),
+                user.getNickname()
+        );
+
         // 리워드 정보 DTO 변환
         List<PledgeResponseDTO.PledgeRewardInfoDTO> rewardInfos = savedPledge.getPledgeRewards().stream()
             .map(pr -> new PledgeResponseDTO.PledgeRewardInfoDTO(
@@ -119,6 +143,12 @@ public class PledgeService {
             savedPledge.getAdditionalAmount(),
             savedPledge.getTotalAmount()
         );
+    }
+
+    // 프로젝트별 후원자 목록 조회
+    @Transactional(readOnly = true)
+    public List<String> getSupporterUserIdsByProjectNo(Long projectNo) {
+        return pledgeRepository.findDistinctUserIdsByProjectNo(projectNo);
     }
 
     /**
