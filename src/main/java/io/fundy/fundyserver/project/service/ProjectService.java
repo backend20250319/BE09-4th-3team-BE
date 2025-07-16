@@ -69,14 +69,18 @@ public class ProjectService {
         LocalDate today = LocalDate.now();
 
         // ✅ APPROVED + IN_PROGRESS 상태 프로젝트 조회
-        List<ProjectStatus> statusList = List.of(ProjectStatus.APPROVED, ProjectStatus.IN_PROGRESS);
+        List<ProjectStatus> statusList = List.of(
+                ProjectStatus.APPROVED,
+                ProjectStatus.IN_PROGRESS,
+                ProjectStatus.COMPLETED,
+                ProjectStatus.FAILED);
 
-        Page<Project> projectPage = projectRepository.findByProductStatusInAndDeadLineGreaterThanEqual(
-                statusList, today, pageable
+        Page<Project> projectPage = projectRepository.findByProductStatusIn(
+                statusList, pageable
         );
 
-        long approvedCount = projectRepository.countByProductStatusInAndDeadLineGreaterThanEqual(
-                statusList, today
+        long approvedCount = projectRepository.countByProductStatusIn(
+                statusList
         );
 
         List<ProjectListResponseDTO> dtoList = projectPage.stream()
@@ -212,6 +216,8 @@ public class ProjectService {
      */
     @Transactional
     public void sendProjectFailNotification(String creatorId, Long projectNo, String projectTitle) {
+
+
         List<String> supporterIds = pledgeService.getSupporterUserIdsByProjectNo(projectNo);
         notificationService.sendProjectFail(projectTitle, projectNo, creatorId, supporterIds);
     }

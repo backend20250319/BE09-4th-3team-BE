@@ -27,16 +27,14 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     // 🔹 여러 프로젝트 번호로 한 번에 가져오기 (예: 즐겨찾기한 프로젝트 리스트 조회)
     List<Project> findAllByProjectNoIn(Collection<Long> projectNos);
 
-    // ✅ 🔹 [목록용] 마감일이 지나지 않은 상태의 프로젝트 목록 조회 (APPROVED, IN_PROGRESS 등)
-    Page<Project> findByProductStatusInAndDeadLineGreaterThanEqual(
-            List<ProjectStatus> statuses, LocalDate today, Pageable pageable
-    );
+    // [목록용]🔹 마감일 조건 없이 상태만으로 프로젝트 목록 조회 (페이지네이션 포함)
+    Page<Project> findByProductStatusIn(List<ProjectStatus> statuses, Pageable pageable);
+
+    // [목록용]🔹 상태 조건만으로 프로젝트 수 카운트
+    long countByProductStatusIn(List<ProjectStatus> statuses);
 
     // ✅ 🔹 [상태 자동전환용] APPROVED 상태이면서 시작일이 오늘이거나 이전인 프로젝트 조회 → IN_PROGRESS로 바꾸기 위함
     List<Project> findByProductStatusAndStartLineLessThanEqual(ProjectStatus status, LocalDate date);
-
-    // ✅ 🔹 [목록용] 마감일이 지나지 않은 프로젝트 개수 조회 (APPROVED + IN_PROGRESS 전용)
-    long countByProductStatusInAndDeadLineGreaterThanEqual(List<ProjectStatus> statuses, LocalDate today);
 
     // ✅ 🔹 [상태 자동전환용] 마감일이 지난 프로젝트 중에서 COMPLETED/FAILED 상태로 바꿔야 할 대상 조회
     List<Project> findByProductStatusInAndDeadLineBefore(List<ProjectStatus> statuses, LocalDate date);
