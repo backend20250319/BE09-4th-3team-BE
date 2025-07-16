@@ -3,10 +3,10 @@ server:
 
 upload:
   path: /images/2/
-  base-url: http://dev.macacolabs.site
-  port: 21
-  userId: team2
-  password: 1234qwer
+  base-url: ${UPLOAD_HOST}
+  port: ${UPLOAD_PORT}
+  userId: ${UPLOAD_ID}
+  password: ${UPLOAD_PASSWORD}
 
 spring:
   application:
