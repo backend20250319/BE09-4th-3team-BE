@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fundy-ingress
+  namespace: fundy
+  annotations: {}
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: fundybe
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: fundy-service
+                port:
+                  number: 80

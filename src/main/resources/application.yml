@@ -11,9 +11,11 @@ upload:
 spring:
   application:
     name: fundyserver
+    config:
+      import:
+        - classpath:secret.yml
+        - classpath:keystore.p12
 
-  config:
-    import: file:C:/jenkins-secrets/secret.yml
 
 
   servlet:
