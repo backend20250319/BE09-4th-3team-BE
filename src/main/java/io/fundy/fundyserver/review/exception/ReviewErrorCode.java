@@ -19,8 +19,8 @@ public enum ReviewErrorCode {
 
     // 권한 관련 에러
     UNAUTHORIZED_REVIEW_ACCESS(HttpStatus.FORBIDDEN, "리뷰에 대한 권한이 없습니다."),
-    NOT_ALLOWED_FOR_ADMIN(HttpStatus.FORBIDDEN, "관리자는 후기를 작성할 수 없습니다."), // ✅ 추가
-    USER_NOT_PARTICIPATED(HttpStatus.FORBIDDEN, "해당 프로젝트에 참여한 사용자만 후기를 작성할 수 있습니다."); // ✅ 추가
+    NOT_ALLOWED_FOR_ADMIN(HttpStatus.FORBIDDEN, "관리자는 후기를 작성할 수 없습니다."),
+    USER_NOT_PARTICIPATED(HttpStatus.FORBIDDEN, "해당 프로젝트에 참여한 사용자만 후기를 작성할 수 있습니다.");
 
     private final HttpStatus status;
     private final String message;

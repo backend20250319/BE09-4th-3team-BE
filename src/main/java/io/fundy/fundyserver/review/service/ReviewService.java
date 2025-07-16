@@ -38,6 +38,12 @@ public class ReviewService {
     private final ProjectRepository projectRepository;
     private final PledgeService pledgeService;
 
+
+    /**
+     * 사용자 아이디로 사용자 조회, 없으면 예외 발생
+     * @param userId 조회할 사용자 ID
+     * @return User 엔티티
+     */
     private User findUserOrThrow(String userId) {
         User user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new ReviewException(ReviewErrorCode.USER_NOT_FOUND));
@@ -45,14 +51,19 @@ public class ReviewService {
         return user;
     }
 
-    // 후원 내역 기준으로 참여 여부 체크
+    /**
+     * 사용자 후원 내역으로 프로젝트 참여 여부 체크
+     * 참여하지 않았으면 예외 발생
+     * @param userId 사용자 ID
+     * @param projectNo 프로젝트 번호
+     */
     private void checkParticipation(String userId, Long projectNo) {
         List<MyPledgeResponseDTO> pledges = pledgeService.getMyPledges(userId);
-        // ⭐ 이 부분을 추가하여 null 체크 및 안전한 초기화
+
+        // null 반환 시 빈 리스트로 초기화하여 NPE 방지
         if (pledges == null) {
-            // 로그를 추가하여 null이 반환되었음을 기록
             System.err.println("[ReviewService] checkParticipation: pledgeService.getMyPledges for userId " + userId + " returned null.");
-            pledges = Collections.emptyList(); // null 대신 빈 리스트로 초기화하여 NPE 방지
+            pledges = Collections.emptyList();
         }
 
         boolean hasPledged = pledges.stream()
@@ -63,12 +74,26 @@ public class ReviewService {
         }
     }
 
+
+    /**
+     * 리뷰 소유자 권한 확인
+     * 소유자가 아니면 예외 발생
+     * @param review 리뷰 엔티티
+     * @param userId 사용자 ID
+     */
     private void checkReviewOwnership(Review review, String userId) {
         if (!review.getUser().getUserId().equals(userId)) {
             throw new ReviewException(ReviewErrorCode.UNAUTHORIZED_REVIEW_ACCESS);
         }
     }
 
+    /**
+     * 리뷰 생성
+     * 참여여부 및 중복 리뷰 작성 여부 체크 후 저장
+     * @param dto 리뷰 요청 DTO
+     * @param userId 작성자 사용자 ID
+     * @return 저장된 리뷰 DTO
+     */
     @Transactional
     public ReviewResponseDTO createReview(ReviewRequestDTO dto, String userId) {
         User user = findUserOrThrow(userId);
@@ -96,6 +121,15 @@ public class ReviewService {
         return toDTO(savedReview);
     }
 
+
+    /**
+     * 프로젝트 번호로 리뷰 조회 (페이징 + 정렬)
+     * @param projectNo 프로젝트 번호
+     * @param page 페이지 번호 (0부터 시작)
+     * @param size 페이지 크기
+     * @param sortBy 정렬 기준 ("satisfaction" 시 planStatus 기준 내림차순, 기본은 createdAt 내림차순)
+     * @return 페이징된 리뷰 DTO 페이지
+     */
     public Page<ReviewResponseDTO> getReviewsByProjectNo(Long projectNo, int page, int size, String sortBy) {
         Sort sort = "satisfaction".equals(sortBy)
                 ? Sort.by(Sort.Direction.DESC, "planStatus")
@@ -107,6 +141,12 @@ public class ReviewService {
         return reviewPage.map(this::toDTO);
     }
 
+    /**
+     * 프로젝트의 최근 리뷰 일부만 미리보기용으로 조회
+     * @param projectNo 프로젝트 번호
+     * @param limit 조회할 리뷰 최대 개수
+     * @return 리뷰 DTO 리스트
+     */
     public List<ReviewResponseDTO> getPreviewReviews(Long projectNo, int limit) {
         Project project = projectRepository.findById(projectNo)
                 .orElseThrow(() -> new ReviewException(ReviewErrorCode.PROJECT_NOT_FOUND));
@@ -119,6 +159,14 @@ public class ReviewService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 리뷰 수정
+     * 소유자 확인, 참여 여부 확인 후 리뷰 내용 업데이트
+     * @param reviewNo 수정할 리뷰 번호
+     * @param dto 리뷰 수정 요청 DTO
+     * @param userId 요청자 사용자 ID
+     * @return 수정 전후 리뷰 DTO를 담은 결과 객체
+     */
     @Transactional
     public ReviewUpdateResultDTO updateReview(Long reviewNo, ReviewRequestDTO dto, String userId) {
         findUserOrThrow(userId);
@@ -143,6 +191,12 @@ public class ReviewService {
         return new ReviewUpdateResultDTO(beforeUpdate, afterUpdate);
     }
 
+    /**
+     * 리뷰 삭제
+     * 사용자 존재 및 리뷰 소유권 확인 후 삭제
+     * @param reviewNo 삭제할 리뷰 번호
+     * @param userId 요청자 사용자 ID
+     */
     @Transactional
     public void deleteReview(Long reviewNo, String userId) {
 
@@ -159,7 +213,11 @@ public class ReviewService {
         reviewRepository.delete(review);
     }
 
-    // 후원했지만 아직 리뷰 안 쓴, 성공 마감된 프로젝트 목록 조회
+    /**
+     * 후원했으나 아직 리뷰를 작성하지 않은, 성공적으로 종료된 프로젝트 목록 조회
+     * @param userId 사용자 ID
+     * @return 리뷰 작성 가능한 프로젝트 DTO 리스트
+     */
     public List<ReviewWritableProjectDTO> getWritableProjects(String userId) {
         final List<MyPledgeResponseDTO> pledges = getPledgesSafely(userId);
 
@@ -193,6 +251,7 @@ public class ReviewService {
                         (a, b) -> a
                 ));
 
+        // 성공 마감되고 리뷰 안 쓴 프로젝트 필터링 후 DTO 매핑
         return pledgedProjects.stream()
                 .filter(p -> p.getCurrentAmount() >= p.getGoalAmount())
                 .filter(p -> p.getDeadLine() != null && p.getDeadLine().isBefore(LocalDate.now()))
@@ -240,8 +299,12 @@ public class ReviewService {
                 .toList();
     }
 
-
-
+    /**
+     * 후원 내역을 안전하게 가져오는 메서드
+     * 예외나 null 발생 시 빈 리스트 반환
+     * @param userId 사용자 ID
+     * @return 후원 내역 리스트 또는 빈 리스트
+     */
     private List<MyPledgeResponseDTO> getPledgesSafely(String userId) {
         try {
             List<MyPledgeResponseDTO> pledges = pledgeService.getMyPledges(userId);
@@ -251,6 +314,11 @@ public class ReviewService {
         }
     }
 
+    /**
+     * 사용자가 작성한 모든 리뷰 조회 (최신순)
+     * @param userId 사용자 ID
+     * @return 리뷰 DTO 리스트
+     */
     public List<ReviewResponseDTO> getWrittenReviews(String userId) {
         findUserOrThrow(userId);
 
@@ -261,6 +329,11 @@ public class ReviewService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Review 엔티티를 ReviewResponseDTO로 변환
+     * @param review Review 엔티티
+     * @return ReviewResponseDTO 객체
+     */
     private ReviewResponseDTO toDTO(Review review) {
         Project project = review.getProject();
 

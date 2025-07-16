@@ -23,6 +23,10 @@ public class NotificationConsumer {
     private final ProjectRepository projectRepository;
     private final ObjectMapper objectMapper;
 
+    /**
+     * RabbitMQ "notification.queue" 큐로부터 알림 메시지 수신 처리 메서드
+     * @param messageJson JSON 형태로 전달된 알림 메시지 문자열
+     */
     @RabbitListener(queues = "notification.queue")
     public void receiveNotification(String messageJson) {
         try {
