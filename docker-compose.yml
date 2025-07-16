@@ -26,7 +26,7 @@ services:
     image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
-      - "5675:5672"    # 메시지 송수신 포트
+      - "5680:5672"     # 메시지 송수신 포트
       - "15675:15672"  # 관리 UI (http://localhost:15672)
     environment:
       RABBITMQ_DEFAULT_USER: guest
