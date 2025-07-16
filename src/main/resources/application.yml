@@ -13,7 +13,7 @@ spring:
     name: fundyserver
 
   config:
-    import: file:C:/jenkins-secrets/secret.yml
+    import: classpath:secret.yml
 
 
   servlet:
