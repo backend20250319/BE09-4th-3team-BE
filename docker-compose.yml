@@ -1,5 +1,27 @@
 version: '3'
+
 services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fundy-backend
+    ports:
+      - "8888:8888"
+    depends_on:
+      - redis
+      - rabbitmq
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      REDIS_HOST: redis
+      RABBITMQ_HOST: rabbitmq
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
