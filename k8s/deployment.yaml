@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fundy-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fundy-server
+  template:
+    metadata:
+      labels:
+        app: fundy-server
+    spec:
+      containers:
+        - name: fundy
+          image: junbem/fundy-server:latest
+          ports:
+            - containerPort: 8888
+          envFrom:
+            - secretRef:
+                name: fundy-secret  # 🔐 이 Secret에서 환경변수 주입
+          volumeMounts:
+            - name: keystore-vol
+              mountPath: /app/keystore.p12
+              subPath: keystore.p12
+      volumes:
+        - name: keystore-vol
+          secret:
+            secretName: keystore-secret

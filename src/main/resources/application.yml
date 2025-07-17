@@ -54,3 +54,11 @@ logging:
 
 frontend:
   url: http://localhost:3000
+
+jwt:
+  secret: "${JWT_SECRET}"
+
+keystore:
+  path: "${KEYSTORE_PATH}"
+  password: "${KEYSTORE_PASSWORD}"
+
