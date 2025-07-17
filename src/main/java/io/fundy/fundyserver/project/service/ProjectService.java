@@ -217,6 +217,7 @@ public class ProjectService {
     @Transactional
     public void sendProjectFailNotification(String creatorId, Long projectNo, String projectTitle) {
 
+
         List<String> supporterIds = pledgeService.getSupporterUserIdsByProjectNo(projectNo);
         notificationService.sendProjectFail(projectTitle, projectNo, creatorId, supporterIds);
     }
