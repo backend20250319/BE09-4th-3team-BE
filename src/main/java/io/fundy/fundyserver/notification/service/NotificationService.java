@@ -210,8 +210,9 @@ public class NotificationService {
                     RabbitMQConfig.ROUTING_KEY,
                     jsonMessage
             );
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("메시지 직렬화 실패", e);
+        } catch (Exception e) {
+            log.error("❌ 알림 메시지 큐 전송 실패 (비즈니스 로직은 계속 진행)", e);
         }
     }
+
 }
