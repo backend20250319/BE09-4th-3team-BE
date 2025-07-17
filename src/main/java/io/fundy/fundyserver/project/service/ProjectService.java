@@ -95,7 +95,8 @@ public class ProjectService {
                         p.getCategory().getName(),
                         p.getProductStatus().name(),
                         p.getCreatorName(),
-                        calculatePercent(p)
+                        calculatePercent(p),
+                        p.getCreatedAt()
                 )).toList();
 
         ProjectListPageResponseDTO.PaginationDTO pagination = new ProjectListPageResponseDTO.PaginationDTO(
@@ -152,7 +153,6 @@ public class ProjectService {
         }
         projectRepository.saveAll(expiredProjects);
     }
-
 
     /***
      * 프로젝트 (목표금액 / 모인금액) 퍼센티지 계산
@@ -222,4 +222,3 @@ public class ProjectService {
         notificationService.sendProjectFail(projectTitle, projectNo, creatorId, supporterIds);
     }
 }
-

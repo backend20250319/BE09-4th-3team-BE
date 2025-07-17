@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -21,4 +23,5 @@ public class ProjectListResponseDTO {
     private String status;
     private String creatorName;
     private int percent;
+    private LocalDateTime createdAt;
 }

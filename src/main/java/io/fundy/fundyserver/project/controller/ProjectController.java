@@ -64,7 +64,6 @@ public class ProjectController {
         );
     }
 
-
     /***
      * 프로젝트 상세 조회
      * @param projectNo
