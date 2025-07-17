@@ -3,7 +3,8 @@ kind: Ingress
 metadata:
   name: fundy-ingress
   namespace: fundy
-  annotations: {}
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   ingressClassName: nginx
   rules:
