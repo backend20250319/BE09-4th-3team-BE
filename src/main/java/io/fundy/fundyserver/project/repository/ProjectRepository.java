@@ -1,9 +1,48 @@
-//package io.fundy.fundyserver.project.repository;
-//
-//import io.fundy.fundyserver.project.entity.Project;
-//import org.springframework.stereotype.Repository;
-//
-//@Repository
-//public interface ProjectRepository {
-//    Project save(Project project);
-//}
+package io.fundy.fundyserver.project.repository;
+
+import io.fundy.fundyserver.project.entity.Project;
+import io.fundy.fundyserver.project.entity.ProjectStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.time.LocalDate;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface ProjectRepository extends JpaRepository<Project, Long> {
+    // 🔹 프로젝트 저장 (save는 JpaRepository에 있지만 명시적으로 재정의한 것)
+    Project save(Project project);
+
+    // 🔹 특정 상태값 프로젝트 목록 조회 (관리자 전용 페이지 등에서 사용)
+    Page<Project> findByProductStatus(ProjectStatus productStatus, Pageable pageable);
+
+    // 🔹 특정 상태의 전체 프로젝트 수 카운트 (ex. APPROVED 몇 개 있는지)
+    int countByProductStatus(ProjectStatus status);
+
+    // 🔹 여러 프로젝트 번호로 한 번에 가져오기 (예: 즐겨찾기한 프로젝트 리스트 조회)
+    List<Project> findAllByProjectNoIn(Collection<Long> projectNos);
+
+    // [목록용]🔹 마감일 조건 없이 상태만으로 프로젝트 목록 조회 (페이지네이션 포함)
+    Page<Project> findByProductStatusIn(List<ProjectStatus> statuses, Pageable pageable);
+
+    // [목록용]🔹 상태 조건만으로 프로젝트 수 카운트
+    long countByProductStatusIn(List<ProjectStatus> statuses);
+
+    // ✅ 🔹 [상태 자동전환용] APPROVED 상태이면서 시작일이 오늘이거나 이전인 프로젝트 조회 → IN_PROGRESS로 바꾸기 위함
+    List<Project> findByProductStatusAndStartLineLessThanEqual(ProjectStatus status, LocalDate date);
+
+    // ✅ 🔹 [상태 자동전환용] 마감일이 지난 프로젝트 중에서 COMPLETED/FAILED 상태로 바꿔야 할 대상 조회
+    List<Project> findByProductStatusInAndDeadLineBefore(List<ProjectStatus> statuses, LocalDate date);
+
+    // 🔹 프로젝트 + 연관 카테고리 한 번에 조회 (N+1 문제 해결을 위한 EntityGraph 설정)
+    @EntityGraph(attributePaths = "category")
+    Page<Project> findAll(Pageable pageable);
+
+    @EntityGraph(attributePaths = {"user"})
+    Optional<Project> findWithUserByProjectNo(Long projectNo);
+}

@@ -1,4 +1,4 @@
-package io.fundy.fundyserver.project.dto.notification;
+package io.fundy.fundyserver.notification.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,6 +10,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class NotificationRequestDTO {
-
-    private Long projectId;
+    private String type = "all";
+    private int page = 0;
+    private int size = 5;
 }

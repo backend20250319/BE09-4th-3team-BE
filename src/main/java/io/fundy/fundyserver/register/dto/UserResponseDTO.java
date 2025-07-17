@@ -13,15 +13,18 @@ import java.time.LocalDateTime;
 
 // 회원가입 관련 DTO
 public class UserResponseDTO {
-    private Integer id;
+    private Integer userNo;
     private String userId;
     private String nickname;
     private String email;
     private String phone;
     private String address;
-    private String accountNumber;
+    private String addressDetail;
     private UserStatus userStatus;
     private RoleType roleType;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private LocalDateTime lastLoginAt;
+    private LocalDateTime lastLogoutAt;
+    private String profileImg;
 }

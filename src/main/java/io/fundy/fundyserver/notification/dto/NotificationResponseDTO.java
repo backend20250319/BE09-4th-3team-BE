@@ -1,4 +1,4 @@
-package io.fundy.fundyserver.project.dto.notification;
+package io.fundy.fundyserver.notification.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,12 +12,13 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class NotificationResponseDTO {
-    private Long notificationId;
-    private Long projectId;
+    private Long notificationNo;
+    private Long projectNo;
     private String projectName;
     private String type;
     private String message;
     private Boolean isRead;
     private LocalDateTime createdAt;
-    private String nickname;
+    private String creatorName;
+    private String projectThumbnailUrl;
 }

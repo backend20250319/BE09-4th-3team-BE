@@ -30,7 +30,11 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getUsername() {
-        return user.getUserId(); // 로그인 ID 기준
+        return getUserId();  // 내부적으로 getUserId()를 호출
+    }
+
+    public String getUserId() {
+        return user.getUserId();  // 실제로는 여기서 엔티티 접근
     }
 
     @Override
