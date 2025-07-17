@@ -216,4 +216,3 @@ public class ProjectService {
         notificationService.sendProjectFail(projectTitle, projectNo, creatorId, supporterIds);
     }
 }
-
