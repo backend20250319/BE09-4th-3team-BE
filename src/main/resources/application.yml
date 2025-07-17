@@ -15,6 +15,7 @@ spring:
   config:
     import: classpath:secret.yml
 
+
   servlet:
     multipart:
       max-file-size: 10MB
