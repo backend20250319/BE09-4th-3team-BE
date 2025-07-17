@@ -150,7 +150,6 @@ public class ProjectService {
         projectRepository.saveAll(expiredProjects);
     }
 
-
     /***
      * 프로젝트 (목표금액 / 모인금액) 퍼센티지 계산
      * @param project
